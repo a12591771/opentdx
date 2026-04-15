@@ -1180,7 +1180,7 @@ if __name__ == '__main__':
         print(client.goods_count())
         print(pd.DataFrame(client.goods_category_list()))
         print(pd.DataFrame(client.goods_list()))
-        print(pd.DataFrame(client.goods_quotes_list(EX_MARKET.US_STOCK, sortType=SORT_TYPE.TOTAL_AMOUNT)))
+        print(pd.DataFrame(client.goods_quotes_list(EX_MARKET.US_STOCK, sort_type=SORT_TYPE.TOTAL_AMOUNT)))
         print(pd.DataFrame([client.goods_quotes(EX_MARKET.US_STOCK, 'TSLA')]))
         print(pd.DataFrame(client.goods_quotes([(EX_MARKET.US_STOCK, 'TSLA'), (EX_MARKET.HK_MAIN_BOARD, '09988')])))
         print(pd.DataFrame(client.goods_kline(EX_MARKET.US_STOCK, 'TSLA', PERIOD.DAILY)))

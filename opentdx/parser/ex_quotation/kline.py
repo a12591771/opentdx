@@ -23,7 +23,7 @@ class K_Line(BaseParser):
             position, trade = struct.unpack('<II', record[20:28])
             
             results.append({
-                'date_time': to_datetime(date_num, minute_category),
+                'datetime': to_datetime(date_num, minute_category),
                 'open': open,
                 'high': high,
                 'low': low,

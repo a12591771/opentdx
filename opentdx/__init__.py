@@ -19,8 +19,8 @@ from .const import (
 __all__ = [
     "TdxClient",
     "QuotationClient",
-    "exQuotationClient",
-    "macQuotationClient",
+    "ExQuotationClient",
+    "MacQuotationClient",
     "MARKET",
     "CATEGORY",
     "PERIOD",

@@ -58,7 +58,7 @@ class ExtendedClient(BaseClient):
     def get_quotes_list(self, market: EX_MARKET, start: int = 0, count: int = 100,
                         sortType: SORT_TYPE = SORT_TYPE.CODE, reverse: bool = False) -> list[dict]:
         return _paginate(
-            lambda s, c: self.call(ex_quotation.QuotesList(market, s, c, sortType, reverse)),
+            lambda s, c: self.call(ex_quotation.QuotesList(market, s, c, sort_type, reverse)),
             100, count, start,
         )
 

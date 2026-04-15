@@ -11,9 +11,9 @@ class QuotesList(BaseParser):
         sort_reverse = 0 if sort_type == SORT_TYPE.CODE else 2 if reverse else 1
 
         filter_raw = 0
-        if filter is None:
-            filter = []
-        for filter_type in filter:
+        if filter_types is None:
+            filter_types = []
+        for filter_type in filter_types:
             filter_raw |= filter_type.value
 
         self.body = struct.pack('<9H', category.value, sort_type.value, start, count,  sort_reverse, 5, filter_raw, 1, 0)
