@@ -41,7 +41,7 @@ class SymbolQuotes(BaseParser):
 
             stock_dict = {
                 "market": market,
-                "symbol": symbol.decode("gbk", errors="ignore").replace("\x00", ""),
+                "code": symbol.decode("gbk", errors="ignore").replace("\x00", ""),
                 "name": name.decode("gbk", errors="ignore").replace("\x00", ""),
             }
 

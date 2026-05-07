@@ -426,7 +426,7 @@ class CommonClientMixin:
             parser = SymbolBar(market=market, code=code, period=period, times=times, start=start, count=current_count, fq=fq)
             result = self.call(parser)
 
-            part = result.get('bars', [])
+            part = result.get('charts', [])
 
             if len(part) > 0:
                 security_list.extend(part)
