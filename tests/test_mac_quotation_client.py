@@ -701,7 +701,7 @@ class TestMacQuotationClientSymbolTransaction:
         assert len(result) > 0, "应至少返回一笔成交数据"
         
         # 验证每笔成交记录的字段
-        required_tx_fields = ['time', 'price', 'volume', 'trade_count', 'bs_flag']
+        required_tx_fields = ['time', 'price', 'vol', 'trade_count', 'bs_flag']
         
         for i, tx in enumerate(result):
             assert isinstance(tx, dict), f"第{i}笔成交应为字典类型"
@@ -712,7 +712,7 @@ class TestMacQuotationClientSymbolTransaction:
             # 验证字段类型
             assert isinstance(tx['time'], time), f"第{i}笔成交 time 应为time类型"
             assert isinstance(tx['price'], float), f"第{i}笔成交 price 应为浮点数"
-            assert isinstance(tx['volume'], int), f"第{i}笔成交 volume 应为整数"
+            assert isinstance(tx['vol'], int), f"第{i}笔成交 vol 应为整数"
             assert isinstance(tx['trade_count'], int), f"第{i}笔成交 trade_count 应为整数"
             assert isinstance(tx['bs_flag'], int), f"第{i}笔成交 bs_flag 应为整数"
             
@@ -723,7 +723,7 @@ class TestMacQuotationClientSymbolTransaction:
             assert tx['price'] > 0, f"第{i}笔成交价格应大于0"
 
             # 验证成交量合理性
-            assert tx['volume'] >= 0, f"第{i}笔成交量应大于等于0"
+            assert tx['vol'] >= 0, f"第{i}笔成交量应大于等于0"
 
             # 验证买卖方向标志
             assert tx['bs_flag'] in [0, 1, 2, 5], \

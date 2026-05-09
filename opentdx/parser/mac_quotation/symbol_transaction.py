@@ -20,7 +20,7 @@ class SymbolTransaction(BaseParser):
             transactions.append({
                 "time": time(time_sec // 3600, time_sec % 3600 // 60, time_sec % 60),
                 "price": price,
-                "volume": volume,
+                "vol": volume,
                 "trade_count": trade_count,
                 "bs_flag": bs_flag
             })

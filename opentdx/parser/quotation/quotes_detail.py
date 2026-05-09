@@ -81,8 +81,8 @@ class QuotesDetail(BaseParser):
                 'vol': vol,
                 'cur_vol': cur_vol,
                 'amount': amount,
-                's_vol': s_vol,
-                'b_vol': b_vol,
+                'in_vol': b_vol,
+                'out_vol': s_vol,
                 's_amount': s_amount,
                 'open_amount': open_amount,
                 'handicap': {
@@ -91,8 +91,7 @@ class QuotesDetail(BaseParser):
                 },
                 'unknown': format(unknown, '016b'),
                 'rise_speed': rise_speed,
-                'active1': active1,
-                'active2': active2,
+                'active': active1,
             })
 
         return quotes

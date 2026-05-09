@@ -208,7 +208,7 @@ class TestTdxClientGoods:
         result = tdx.goods_history_transaction(EX_MARKET.US_STOCK, 'TSLA', date(2026, 5, 1))
         assert isinstance(result, list)
         if result:
-            assert 'time' in result[0] and 'price' in result[0] and 'action' in result[0]
+            assert 'time' in result[0] and 'price' in result[0] and 'bs_flag' in result[0]
 
     def test_goods_tick_chart_with_date(self, tdx):
         result = tdx.goods_tick_chart(EX_MARKET.US_STOCK, 'TSLA', date(2026, 5, 1))
