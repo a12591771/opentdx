@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pandas as pd
 
 from datetime import date
@@ -5,7 +6,7 @@ from .baseStockClient import update_last_ack_time
 from opentdx.const import ADJUST, BOARD_TYPE, CATEGORY, EX_CATEGORY, EX_MARKET, MARKET, PERIOD, EX_BOARD_TYPE, SORT_TYPE, SORT_ORDER, mac_hosts, mac_ex_hosts
 from opentdx.parser.mac_quotation import BoardList, BoardMembersQuotes, SymbolBar, SymbolBelongBoard, SymbolCapitalFlow,SymbolTickChart, SymbolQuotes, SymbolTransaction
 from opentdx.utils.log import log
-from opentdx.utils.bitmap import FieldBit, PresetField, FieldSelection
+from opentdx.utils.bitmap import FieldBit, PresetField, Fields
 from functools import wraps
 
 
@@ -89,7 +90,7 @@ class CommonClientMixin:
         self, board_symbol: str | CATEGORY | EX_CATEGORY = "881001", count=100000,
         sort_type: SORT_TYPE = SORT_TYPE.CHANGE_PCT,
         sort_order=SORT_ORDER.DESC,
-        fields: FieldBit | PresetField | FieldSelection | list[FieldBit] | None = None,
+        fields: Fields | None = None,
     ):
         """
         分页获取指定板块成分股的实时行情数据，支持按涨跌幅、成交量等字段排序。
@@ -517,7 +518,7 @@ class CommonClientMixin:
     def get_symbol_quotes(
         self,
         code_list: list[tuple[MARKET | EX_MARKET, str]],
-        fields: FieldBit | PresetField | FieldSelection | list[FieldBit] | None = None,
+        fields: Fields | None = None,
     ):
         """
         获取多个股票的实时行情报价

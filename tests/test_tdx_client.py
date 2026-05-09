@@ -117,6 +117,41 @@ class TestTdxClientStock:
         assert isinstance(result, list)
 
 
+    def test_stock_auction(self, tdx):
+        result = tdx.stock_auction(MARKET.SZ, '000001')
+        assert isinstance(result, list)
+        assert len(result) > 0
+        item = result[0]
+        assert 'time' in item and 'price' in item
+        assert 'matched' in item and 'unmatched' in item
+        # unmatched 应为有符号整数 (修复后)
+        assert isinstance(item['unmatched'], int)
+
+    def test_stock_history_orders(self, tdx):
+        result = tdx.stock_history_orders(MARKET.SZ, '000001', date(2026, 5, 8))
+        assert isinstance(result, list)
+        if result:
+            assert 'price' in result[0] and 'vol' in result[0]
+
+    def test_stock_kline_with_times(self, tdx):
+        result = tdx.stock_kline(MARKET.SH, '999999', PERIOD.MINS, times=10, count=10)
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    def test_stock_quotes_detail_tuple(self, tdx):
+        result = tdx.stock_quotes_detail((MARKET.SZ, '000001'))
+        assert result is None or isinstance(result, list)
+
+    def test_index_info_single(self, tdx):
+        result = tdx.index_info(MARKET.SH, '999999')
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    def test_index_info_tuple(self, tdx):
+        result = tdx.index_info((MARKET.SH, '999999'))
+        assert result is None or isinstance(result, list)
+
+
 class TestTdxClientGoods:
     """TdxClient 扩展行情 API"""
 
@@ -157,3 +192,37 @@ class TestTdxClientGoods:
     def test_goods_chart_sampling(self, tdx):
         result = tdx.goods_chart_sampling(EX_MARKET.US_STOCK, 'TSLA')
         assert isinstance(result, list)
+
+    def test_goods_quotes_list(self, tdx):
+        result = tdx.goods_quotes_list(EX_MARKET.US_STOCK, count=5)
+        assert isinstance(result, list)
+        assert len(result) > 0
+        assert 'code' in result[0]
+
+    def test_goods_quotes_list_with_sort(self, tdx):
+        result = tdx.goods_quotes_list(EX_MARKET.HK_MAIN_BOARD, count=5, sortType=SORT_TYPE.TOTAL_AMOUNT)
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    def test_goods_history_transaction(self, tdx):
+        result = tdx.goods_history_transaction(EX_MARKET.US_STOCK, 'TSLA', date(2026, 5, 1))
+        assert isinstance(result, list)
+        if result:
+            assert 'time' in result[0] and 'price' in result[0] and 'action' in result[0]
+
+    def test_goods_tick_chart_with_date(self, tdx):
+        result = tdx.goods_tick_chart(EX_MARKET.US_STOCK, 'TSLA', date(2026, 5, 1))
+        assert isinstance(result, list)
+
+    def test_goods_kline_with_period(self, tdx):
+        result = tdx.goods_kline(EX_MARKET.HK_MAIN_BOARD, '09988', PERIOD.DAILY, count=5)
+        assert isinstance(result, list)
+        assert len(result) > 0
+
+    def test_goods_category_list_structure(self, tdx):
+        result = tdx.goods_category_list()
+        assert isinstance(result, list)
+        for item in result:
+            assert 'name' in item
+            assert 'code' in item
+            assert 'abbr' in item

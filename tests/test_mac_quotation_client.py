@@ -603,7 +603,7 @@ class TestMacQuotationClientSymbolQuotes:
             (MARKET.SH, '600000'),
         ]
         
-        result = mqc.get_symbol_quotes(code_list, fields=PresetField.BASIC.value + PresetField.QUOTE.value)
+        result = mqc.get_symbol_quotes(code_list, fields=PresetField.BASIC + PresetField.QUOTE)
         
         # 验证返回结构
         assert isinstance(result, dict), f"返回类型应为dict，实际为{type(result)}"
