@@ -38,14 +38,74 @@
 pip install opentdx
 ```
 
-## 指南
+## 命令行
 
 ```bash
-opentdx doc      # 交互式接口文档（推荐入门）
-opentdx mm       # 实时市场异动监控
+# 安装后即可使用 opentdx 命令
+opentdx doc                              # 交互式接口文档（推荐入门）
+opentdx mm                               # 实时市场异动监控
 ```
 
-## 快速上手
+### A股行情
+
+```bash
+opentdx kline SZ 000001                  # K线（默认日线、10条）
+opentdx kline SH 600519 --period DAILY --count 50 --adjust QFQ
+opentdx kline SZ 000001 --period MIN_30 --count 20
+
+opentdx quote "SZ 000001, SH 600000"     # 批量报价
+
+opentdx index "SH 999999, SZ 399001"     # 指数信息
+
+opentdx stock-list SZ --count 20         # 股票列表
+
+opentdx unusual SZ --count 20            # 异动数据
+
+opentdx transaction SZ 000001 --count 50 # 逐笔成交（实时）
+opentdx transaction SZ 000001 --date 2026-03-03 --count 50  # 历史
+
+opentdx tick SZ 000001                   # 分时图
+opentdx tick SH 999999 --date 2026-03-16 # 历史分时
+
+opentdx auction SZ 000001                # 竞价数据
+```
+
+### 扩展市场（港股/美股/期货）
+
+```bash
+opentdx g-kline US_STOCK TSLA --period DAILY --count 10
+opentdx g-kline HK_MAIN_BOARD 00700
+
+opentdx g-quote "US_STOCK TSLA, HK_MAIN_BOARD 00700"
+```
+
+### MAC 协议（板块 / 统一K线 / 主力监控）
+
+```bash
+opentdx board HY --count 10              # 行业板块
+opentdx board DQ                          # 地区板块
+opentdx board GN                          # 概念板块
+opentdx board HK_ALL                      # 港股板块
+opentdx board US_ALL                      # 美股板块
+
+opentdx board-members 880761 --count 10   # 板块成分股行情
+opentdx board-members 881394 --sort VOLUME --count 20
+opentdx board-members HK0281              # 港股板块
+opentdx board-members US0495              # 美股板块
+
+opentdx s-bars SZ 000001 --period DAILY --adjust QFQ   # 统一K线（A股/港股/美股通用）
+opentdx s-bars HK_MAIN_BOARD 00700 --period DAILY
+opentdx s-bars US_STOCK TSLA --period WEEKLY
+
+opentdx s-quotes "SZ 000001, SH 600000"   # 统一报价
+opentdx s-quotes "US_STOCK TSLA, HK_MAIN_BOARD 00700"
+
+opentdx monitor SH --count 10             # 主力监控
+```
+
+> 所有命令支持 `--json` 参数输出结构化数据，便于 AI / 脚本消费。
+
+## 快速上手（Python）
 
 ```python
 from datetime import date
