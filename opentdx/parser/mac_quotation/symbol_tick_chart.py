@@ -3,7 +3,7 @@ import struct
 
 from opentdx.const import EX_MARKET, MARKET
 from opentdx.parser.baseParser import BaseParser, register_parser
-from opentdx.utils.help import industry_to_board_symbol
+
 @register_parser(0x122D, 1)
 class SymbolTickChart(BaseParser):
     def __init__(self, market: MARKET | EX_MARKET, code: str, query_date: date = None):
@@ -46,6 +46,5 @@ class SymbolTickChart(BaseParser):
             "turnover": turnover,
             "avg": avg,
             "industry": industry,
-            "industry_code": industry_to_board_symbol(industry),
             "charts": charts
         }

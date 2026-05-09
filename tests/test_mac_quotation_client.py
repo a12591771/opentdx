@@ -244,8 +244,7 @@ class TestMacQuotationClientExchange:
         # 新增验证逻辑
         assert df is not None and not df.empty, "获取的数据为空"
         
-        # 筛选 symbol 为 601066 的行
-        # 注意：symbol 在 DataFrame 中可能是 int 或 string 类型，这里假设是 int，如果是 string 请改为 '601066'
+        # 筛选 code 为 601066 的行
         ah_df = df[df['code'] == '601066']
         
         # 确保找到了该股票
@@ -318,7 +317,7 @@ class TestMacQuotationClientTickChart:
             'market', 'code', 'name', 'decimal', 'category', 'vol_unit',
             'time', 'pre_close', 'open', 'high', 'low', 'close',
             'momentum', 'vol', 'amount', 'turnover', 'avg',
-            'industry', 'industry_code', 'charts'
+            'industry', 'charts'
         ]
         
         for field in required_fields:

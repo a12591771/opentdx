@@ -15,7 +15,7 @@ class TestQuotationClientLogin:
         assert qc.connected is True
 
     def test_heartbeat(self, qc):
-        result = qc.doHeartBeat()
+        result = qc._do_heartbeat()
         assert result is not None
 
 
@@ -39,7 +39,7 @@ class TestQuotationClientStock:
         assert 'code' in result[0] and 'name' in result[0]
 
     def test_get_kline(self, qc):
-        result = qc.get_kline(MARKET.SH, '000001', PERIOD.DAILY, count=10)
+        result = qc.get_kline(MARKET.SZ, '000001', PERIOD.DAILY, count=10)
         assert isinstance(result, list)
         assert len(result) > 0
         assert 'datetime' in result[0]

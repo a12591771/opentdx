@@ -2,16 +2,29 @@
 pytdx2 交互式接口文档 — 每个接口独立演示
 用法: python -m opentdx.commands.doc_demo
       或 opentdx doc
-      或 opentdx doc --key 05
 """
 
 from collections import OrderedDict
-from datetime import date
+from datetime import date, datetime
 
 import pandas as pd
 
 from opentdx.tdxClient import TdxClient
 from opentdx.const import *
+
+
+def _front_month(product: str) -> str:
+    """根据当前日期生成主力期货合约代码，如 IF2605"""
+    now = datetime.now()
+    y = now.year % 100
+    if now.day < 15:
+        m = now.month
+    else:
+        m = now.month + 1
+        if m > 12:
+            m = 1
+            y = (now.year + 1) % 100
+    return f"{product}{y:02d}{m:02d}"
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', 200)
@@ -153,10 +166,10 @@ def _(c):
 
 @demo('14', 'stock_quotes_list     行情列表(排序+过滤)')
 def _(c):
-    show("c.stock_quotes_list(CATEGORY.A, count=10, sortType=SORT_TYPE.TOTAL_AMOUNT, filter=[...])",
+    show("c.stock_quotes_list(CATEGORY.A, count=10, sort_type=SORT_TYPE.TOTAL_AMOUNT, filter=[...])",
          pd.DataFrame(c.stock_quotes_list(
              CATEGORY.A, count=10,
-             sortType=SORT_TYPE.TOTAL_AMOUNT,
+             sort_type=SORT_TYPE.TOTAL_AMOUNT,
              filter=[FILTER_TYPE.BJ, FILTER_TYPE.ST, FILTER_TYPE.KC],
          )),
          comment="A股按总金额排序，排除北证/ST/科创，取前10")
@@ -200,8 +213,8 @@ def _(c):
 
 @demo('20', 'stock_transaction(his)历史成交')
 def _(c):
-    show("c.stock_transaction(MARKET.SH, '000001', date(2026, 3, 3))",
-         pd.DataFrame(c.stock_transaction(MARKET.SH, '000001', date(2026, 3, 3))),
+    show("c.stock_transaction(MARKET.SZ, '000001', date(2026, 3, 3))",
+         pd.DataFrame(c.stock_transaction(MARKET.SZ, '000001', date(2026, 3, 3))),
          comment="平安银行历史成交")
 
 
@@ -262,16 +275,18 @@ def _(c):
 
 @demo('28', 'goods_quotes          单只商品报价')
 def _(c):
-    show("c.goods_quotes(EX_MARKET.CFFEX_FUTURES, 'IF2602')",
-         c.goods_quotes(EX_MARKET.CFFEX_FUTURES, 'IF2602'),
-         comment="中金所 IF2602 报价")
+    code = _front_month('IF')
+    show(f"c.goods_quotes(EX_MARKET.CFFEX_FUTURES, '{code}')",
+         c.goods_quotes(EX_MARKET.CFFEX_FUTURES, code),
+         comment=f"中金所 {code} 报价")
 
 
 @demo('29', 'goods_quotes(batch)   批量商品报价')
 def _(c):
-    show("c.goods_quotes([(EX_MARKET.CFFEX_FUTURES,'IC2602'), ...])",
+    ic = _front_month('IC')
+    show(f"c.goods_quotes([(EX_MARKET.CFFEX_FUTURES,'{ic}'), ...])",
          pd.DataFrame(c.goods_quotes([
-             (EX_MARKET.CFFEX_FUTURES, 'IC2602'),
+             (EX_MARKET.CFFEX_FUTURES, ic),
              (EX_MARKET.HK_MAIN_BOARD, '09988'),
              (EX_MARKET.US_STOCK, 'TSLA'),
          ])),
@@ -407,8 +422,8 @@ def _(_tdx=None):
 @demo('46', 'get_symbol_bars(hk)   港股K线')
 def _(_tdx=None):
     client = _get_mac_ex()
-    show("exClient.get_symbol_bars(EX_MARKET.HK_MAIN_BOARD, '00100', PERIOD.DAILY, count=3)",
-         pd.DataFrame(client.get_symbol_bars(EX_MARKET.HK_MAIN_BOARD, '00100', PERIOD.DAILY, count=3)))
+    show("exClient.get_symbol_bars(EX_MARKET.HK_MAIN_BOARD, '00700', PERIOD.DAILY, count=3)",
+         pd.DataFrame(client.get_symbol_bars(EX_MARKET.HK_MAIN_BOARD, '00700', PERIOD.DAILY, count=3)))
 
 
 @demo('47', 'get_symbol_bars(us)   美股K线')
@@ -435,7 +450,7 @@ def _(_tdx=None):
     client.disconnect()
 
 
-@demo('49', 'QuotationClient — download_file / table_file / csv_file')
+@demo('49', 'QuotationClient — download_file / get_text_file')
 def _(_tdx=None):
     from opentdx.client.standardClient import StandardClient as QuotationClient
 
@@ -450,15 +465,15 @@ def _(_tdx=None):
         print(f"  预览: {data[:200].decode('utf-8', errors='replace')}")
     print()
 
-    show("client.get_table_file('tdxhy.cfg')", comment="表格文件 (通达信/申万行业对照)")
-    df = pd.DataFrame(client.get_table_file('tdxhy.cfg'),
+    show("client.get_text_file('tdxhy.cfg')", comment="表格文件 (通达信/申万行业对照)")
+    df = pd.DataFrame(client.get_text_file('tdxhy.cfg'),
                       columns=['market', 'code', '通达信行业', 'unk', 'nown', '申万行业'])
     print(f"  共 {len(df)} 条")
     print(df[:3])
     print()
 
-    show("client.get_csv_file('spec/speckzzdata.txt')", comment="CSV文件 (转债表)")
-    df = pd.DataFrame(client.get_csv_file('spec/speckzzdata.txt'),
+    show("client.get_text_file('spec/speckzzdata.txt', sep=',')", comment="CSV文件 (转债表)")
+    df = pd.DataFrame(client.get_text_file('spec/speckzzdata.txt', sep=','),
                       columns=['market', 'code', '关联股', '转股价', '票面利率', '发行规模'])
     print(f"  共 {len(df)} 条")
     print(df[:3])

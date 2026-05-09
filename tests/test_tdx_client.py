@@ -26,13 +26,13 @@ class TestTdxClientStock:
         assert 'code' in result[0] and 'name' in result[0]
 
     def test_stock_kline(self, tdx):
-        result = tdx.stock_kline(MARKET.SH, '000001', PERIOD.DAILY, count=10)
+        result = tdx.stock_kline(MARKET.SZ, '000001', PERIOD.DAILY, count=10)
         assert isinstance(result, list)
         assert len(result) > 0
         assert 'datetime' in result[0] and 'open' in result[0]
 
     def test_stock_kline_with_adjust(self, tdx):
-        result = tdx.stock_kline(MARKET.SH, '000001', PERIOD.DAILY, count=5, adjust=ADJUST.QFQ)
+        result = tdx.stock_kline(MARKET.SZ, '000001', PERIOD.DAILY, count=5, adjust=ADJUST.QFQ)
         assert isinstance(result, list)
         assert len(result) > 0
 

@@ -60,16 +60,23 @@ def exchange_board_code(board_symbol):
 
     return board_code
 
-def industry_to_board_symbol(industry_value:str) -> str:
-    # 从83005提取出3005，然后拼接为X3005
-    industry_str = str(industry_value)
-    suffix = industry_str[-4:]  # 获取后4位，如"3005"
-    key = f"X{suffix}"  # 拼接为"X3005"
-    
+def industry_to_board_symbol(industry_value) -> str:
+    """将 industry 原始值转换为板块代码，兼容已转换的板块代码直接透传"""
+    industry_str = str(industry_value).strip()
+    if not industry_str:
+        return ""
+
+    # 已经是板块代码（88xxxx），直接返回
+    if industry_str.startswith("88") and len(industry_str) == 6:
+        return industry_str
+
+    # 从原始值（如 83005）提取后4位，拼接为 X3005 查找
+    suffix = industry_str[-4:]
+    key = f"X{suffix}"
     try:
         return str(IndustryCode[key].value)
     except KeyError:
-        return ""  # 如果找不到对应的枚举项
+        return ""
     
 def ah_code_to_symbol(ah_code:str, market:str) -> str:
     """
