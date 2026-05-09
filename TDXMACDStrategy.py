@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
-from opentdx.client.quotationClient import QuotationClient
+from opentdx.client.standardClient import StandardClient as QuotationClient
 from opentdx.const import MARKET, PERIOD
 
 class TDXMACDStrategy:

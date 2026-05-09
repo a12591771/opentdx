@@ -1,25 +1,28 @@
-
 import socket
 import threading
 import time
+import struct
+import zlib
+import functools
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from opentdx.parser.baseParser import BaseParser
 from opentdx.utils.log import log
 from opentdx.utils.heartbeat import HeartBeatThread
 
-import zlib
-import struct
-import functools
-
-CONNECT_TIMEOUT = 5.000
+CONNECT_TIMEOUT = 5.0
 RSP_HEADER_LEN = 0x10
+
 
 def update_last_ack_time(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kw):
-        if self.heartbeat and self.heartbeat_thread:
-            self.heartbeat_thread.update_last_ack_time()
-            
+        ht = getattr(self, 'heartbeat_thread', None)
+        if ht is None:
+            t = getattr(self, '_t', None)
+            if t is not None:
+                ht = getattr(t, 'heartbeat_thread', None)
+        if ht and ht.is_alive():
+            ht.update_last_ack_time()
+
         current_exception = None
         try:
             ret = func(self, *args, **kw)
@@ -37,22 +40,18 @@ def update_last_ack_time(func):
                             return ret
                     except Exception as retry_e:
                         current_exception = retry_e
-                        log.debug(
-                            "hit exception on *retry* req exception is " + str(retry_e))
-
+                        log.debug("hit exception on *retry* req exception is " + str(retry_e))
                 log.debug("perform auto retry on req ")
-
             ret = None
             if self.raise_exception:
                 to_raise = Exception("calling function error")
                 to_raise.original_exception = current_exception if current_exception else None
                 raise to_raise
-        # raise_exception=True 抛出异常, raise_exception=False 返回None
         return ret
     return wrapper
 
+
 def _paginate(fetch_fn, page_size, count, start=0):
-    """通用分页：fetch_fn(start, page_size) -> list，count=0 表示取全部"""
     results = []
     remaining = count if count != 0 else float('inf')
     while remaining > 0:
@@ -65,8 +64,8 @@ def _paginate(fetch_fn, page_size, count, start=0):
         start += len(part)
     return results
 
+
 def _normalize_code_list(code_list, code=None):
-    """将 (market, code) / [(m,c), ...] 统一为 [(m,c), ...]"""
     if code is not None:
         return [(code_list, code)]
     if (isinstance(code_list, list) or isinstance(code_list, tuple)) \
@@ -74,22 +73,17 @@ def _normalize_code_list(code_list, code=None):
         return [code_list]
     return code_list
 
-class DefaultRetryStrategy():
-    """
-    默认的重试策略，您可以通过写自己的重试策略替代本策略, 改策略主要实现gen方法，该方法是一个生成器，
-    返回下次重试的间隔时间, 单位为秒，我们会使用 time.sleep在这里同步等待之后进行重新connect,然后再重新发起
-    源请求，直到gen结束。
-    """
+
+class DefaultRetryStrategy:
     def gen(self):
-        # 默认重试4次 ... 时间间隔如下
         for time_interval in [0.1, 0.5, 1, 2]:
             yield time_interval
 
 
-class BaseStockClient():
+class Transport:
     hosts = []
-    def __init__(self, multithread=False, heartbeat=False, auto_retry=False, raise_exception=False): 
 
+    def __init__(self, multithread=False, heartbeat=False, auto_retry=False, raise_exception=False):
         self.client = None
         self.ip = None
         self.port = None
@@ -100,26 +94,20 @@ class BaseStockClient():
             self.lock = None
         self.heartbeat = heartbeat
         self.heartbeat_thread = None
-        self.stop_event = None
+        self._stop_event = None
         self.connected = False
 
-        # 是否重试
         self.auto_retry = auto_retry
-        # 可以覆盖这个属性，使用新的重试策略
         self.retry_strategy = DefaultRetryStrategy()
-        # 是否在函数调用出错的时候抛出异常
         self.raise_exception = raise_exception
 
-    def call(self, parser: BaseParser):
-        resp = self.send(parser.serialize())
-        if resp is None:
-            return None
-        else:
-            return parser.deserialize(resp)
+        self._heartbeat_callback = None
+
+    def set_heartbeat_callback(self, callback):
+        self._heartbeat_callback = callback
 
     def connect(self, ip=None, port=7709, time_out=5, bind_port=None, bind_ip='0.0.0.0'):
         if ip is None:
-            # 选择延迟最低的服务器连接
             infos = []
             def get_latency(target_ip, target_port, timeout):
                 client = None
@@ -142,7 +130,6 @@ class BaseStockClient():
                             client.close()
                         except OSError:
                             pass
-            # 限制并发数避免端口耗尽
             max_workers = min(10, len(self.hosts))
             with ThreadPoolExecutor(max_workers=max_workers) as executor:
                 futures = {
@@ -150,8 +137,8 @@ class BaseStockClient():
                     for host in self.hosts
                 }
                 for f in as_completed(futures):
-                    pass  # results collected via infos list
-            
+                    pass
+
             infos.sort(key=lambda x: x['time'])
             if len(infos) == 0:
                 raise Exception("no available server")
@@ -159,22 +146,13 @@ class BaseStockClient():
             return self._connect(infos[0]['ip'], infos[0]['port'], time_out, bind_port, bind_ip)
         else:
             return self._connect(ip, port, time_out, bind_port, bind_ip)
-        
-    def _connect(self, ip, port=7709, time_out=CONNECT_TIMEOUT, bind_port=None, bind_ip='0.0.0.0'):
-        """
 
-        :param ip:  服务器ip 地址
-        :param port:  服务器端口
-        :param time_out: 连接超时时间
-        :param bind_port: 绑定的本地端口
-        :param bind_ip: 绑定的本地ip
-        :return: 是否连接成功 True/False
-        """
+    def _connect(self, ip, port=7709, time_out=CONNECT_TIMEOUT, bind_port=None, bind_ip='0.0.0.0'):
         if ip.count(":") > 0:
             self.client = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         else:
             self.client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            
+
         self.ip = ip
         self.port = port
         self.client.settimeout(time_out)
@@ -201,25 +179,19 @@ class BaseStockClient():
         log.debug("connected!")
         self.connected = True
 
-        if self.heartbeat and not (self.heartbeat_thread and self.heartbeat_thread.is_alive()):
-            self.stop_event = threading.Event()
-            self.heartbeat_thread = HeartBeatThread(self.client, self.stop_event, self.doHeartBeat)
+        if self.heartbeat and self._heartbeat_callback and \
+                not (self.heartbeat_thread and self.heartbeat_thread.is_alive()):
+            self._stop_event = threading.Event()
+            self.heartbeat_thread = HeartBeatThread(self.client, self._stop_event, self._heartbeat_callback)
             self.heartbeat_thread.daemon = True
             self.heartbeat_thread.start()
         return self
 
-    def doHeartBeat(self):
-        """
-        子类可以覆盖这个方法，实现自己的心跳包
-        :return:
-        """
-        pass
-
     def disconnect(self):
         if self.heartbeat_thread and self.heartbeat_thread.is_alive():
-            self.stop_event.set()
+            self._stop_event.set()
         self.heartbeat_thread = None
-        self.stop_event = None
+        self._stop_event = None
 
         if self.client:
             log.debug("disconnecting")
@@ -235,11 +207,6 @@ class BaseStockClient():
             self.connected = False
 
     def send(self, data):
-        """
-        发送数据
-        :param data:  要发送的数据
-        :return:  发送成功返回True，否则返回False
-        """
         if self.lock:
             with self.lock:
                 return self._send(data)
@@ -247,22 +214,14 @@ class BaseStockClient():
             return self._send(data)
 
     def _send(self, data):
-        """
-        发送数据
-        :param data:  要发送的数据
-        :return:  发送成功返回True，否则返回False
-        """
         if not self.client:
             log.debug("not connected")
             if self.raise_exception:
                 raise Exception("not connected")
             return None
 
-        # customize: 自定义协议号
-        # zipped: 0x1c 表示压缩，0xc 表示不压缩
         try:
             zipped, customize, control, zipsize, unzip_size, msg_id = struct.unpack('<BIBHHH', data[:12])
-            # log.debug("sending data: zipped: %s, customize: %s, control: %s, zipsize: %d, unzip_size: %d, msg_id: %s" % (hex(zipped), hex(customize), hex(control), zipsize, unzip_size, hex(msg_id)))
             send_data = self.client.send(data)
             if send_data != len(data):
                 log.debug("send data error")
@@ -270,11 +229,7 @@ class BaseStockClient():
                     raise Exception("send data error")
             else:
                 head_buf = self.client.recv(RSP_HEADER_LEN)
-                
-                # prefix: b1 cb 74 00 固定响应头
                 prefix, zipped, customize, unknown, msg_id, zipsize, unzip_size = struct.unpack('<IBIBHHH', head_buf)
-                # log.debug("recv Header: zipped: %s, customize: %s, control: %s, msg_id: %s, zipsize: %d, unzip_size: %d" % (hex(zipped), hex(customize), hex(unknown), hex(msg_id), zipsize, unzip_size))
-
                 need_unzip_size = zipsize != unzip_size
                 body_buf = bytearray()
                 while zipsize > 0:
@@ -285,7 +240,6 @@ class BaseStockClient():
                     zipsize -= len(data_buf)
                 if need_unzip_size:
                     body_buf = zlib.decompress(body_buf)
-
                 return body_buf
         except Exception as e:
             log.debug(str(e))
@@ -294,13 +248,12 @@ class BaseStockClient():
             if self.raise_exception:
                 raise Exception("send error")
 
-    @update_last_ack_time
     def download_file(self, fetch_fn, filename: str, filesize=0, report_hook=None):
         file_content = bytearray()
         current_downloaded_size = 0
         get_zero_length_package_times = 0
         while current_downloaded_size < filesize or filesize == 0:
-            response = self.call(fetch_fn(filename, current_downloaded_size))
+            response = fetch_fn(filename, current_downloaded_size)
             if not response:
                 break
             if response["size"] > 0:

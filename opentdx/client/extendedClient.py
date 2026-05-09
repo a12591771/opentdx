@@ -1,17 +1,21 @@
 from datetime import date
 
-from opentdx.parser import ex_quotation
-
-from .baseStockClient import BaseStockClient, update_last_ack_time, _paginate, _normalize_code_list
-from .commonClientMixin import CommonClientMixin
+from .baseClient import BaseClient
+from .transport import update_last_ack_time, _paginate, _normalize_code_list
 from opentdx.const import EX_MARKET, PERIOD, SORT_TYPE, ex_hosts
+from opentdx.parser import ex_quotation
 from opentdx.utils.log import log
 
-class exQuotationClient(BaseStockClient, CommonClientMixin):
-    def __init__(self, multithread=False, heartbeat=False, auto_retry=False, raise_exception=False):
-        super().__init__(multithread, heartbeat, auto_retry, raise_exception)
-        self.hosts = ex_hosts
-        self._sp_mode_enabled = False
+
+class ExtendedClient(BaseClient):
+    """扩展行情客户端 (港股/美股/期货)"""
+
+    def __init__(self, multithread=False, heartbeat=False, auto_retry=False,
+                 raise_exception=False):
+        super().__init__(ex_hosts, 7727, multithread, heartbeat, auto_retry, raise_exception)
+
+    def _do_heartbeat(self):
+        return self.call(ex_quotation.HeartBeat())
 
     def login(self, show_info=False) -> bool:
         try:
@@ -25,8 +29,7 @@ class exQuotationClient(BaseStockClient, CommonClientMixin):
 
     def server_info(self):
         try:
-            info = self.call(ex_quotation.ServerInfo())
-            return info
+            return self.call(ex_quotation.ServerInfo())
         except Exception as e:
             log.error("get server info failed: %s", e)
             return None
@@ -44,7 +47,8 @@ class exQuotationClient(BaseStockClient, CommonClientMixin):
         return self.call(ex_quotation.List(start, count))
 
     @update_last_ack_time
-    def get_quotes_list(self, market: EX_MARKET, start: int = 0, count: int = 100, sortType: SORT_TYPE = SORT_TYPE.CODE, reverse: bool = False) -> list[dict]:
+    def get_quotes_list(self, market: EX_MARKET, start: int = 0, count: int = 100,
+                        sortType: SORT_TYPE = SORT_TYPE.CODE, reverse: bool = False) -> list[dict]:
         return _paginate(
             lambda s, c: self.call(ex_quotation.QuotesList(market, s, c, sortType, reverse)),
             100, count, start,
@@ -65,7 +69,8 @@ class exQuotationClient(BaseStockClient, CommonClientMixin):
         return self.call(ex_quotation.Quotes2(code_list))
 
     @update_last_ack_time
-    def get_kline(self, market: EX_MARKET, code: str, period: PERIOD, start: int = 0, count: int = 800, times: int = 1) -> list[dict]:
+    def get_kline(self, market: EX_MARKET, code: str, period: PERIOD, start: int = 0,
+                  count: int = 800, times: int = 1) -> list[dict]:
         return self.call(ex_quotation.K_Line(market, code, period, times, start, count))
 
     @update_last_ack_time
@@ -103,4 +108,4 @@ class exQuotationClient(BaseStockClient, CommonClientMixin):
 
     @update_last_ack_time
     def download_file(self, filename: str, filesize=0, report_hook=None):
-        return super().download_file(ex_quotation.FileDownload, filename, filesize, report_hook)
+        return self._download_file_impl(ex_quotation.FileDownload, filename, filesize, report_hook)

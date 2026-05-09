@@ -421,7 +421,7 @@ def _(_tdx=None):
 
 @demo('48', 'QuotationClient 直调 — HeartBeat/Info/公告')
 def _(_tdx=None):
-    from opentdx.client.quotationClient import QuotationClient
+    from opentdx.client.standardClient import StandardClient as QuotationClient
     from opentdx.parser import quotation
 
     client = QuotationClient()
@@ -436,7 +436,7 @@ def _(_tdx=None):
 
 @demo('49', 'QuotationClient — download_file / table_file / csv_file')
 def _(_tdx=None):
-    from opentdx.client.quotationClient import QuotationClient
+    from opentdx.client.standardClient import StandardClient as QuotationClient
 
     client = QuotationClient()
     if not client.connect().login():
@@ -467,7 +467,7 @@ def _(_tdx=None):
 
 @demo('50', 'QuotationClient — QuotesEncrypt / get_company_info')
 def _(_tdx=None):
-    from opentdx.client.quotationClient import QuotationClient
+    from opentdx.client.standardClient import StandardClient as QuotationClient
     from opentdx.parser import quotation
 
     client = QuotationClient()
@@ -489,7 +489,7 @@ def _(_tdx=None):
 
 @demo('51', 'exQuotationClient 直调 — server_info / table / download')
 def _(_tdx=None):
-    from opentdx.client.exQuotationClient import exQuotationClient
+    from opentdx.client.extendedClient import ExtendedClient as exQuotationClient
 
     client = exQuotationClient()
     if not client.connect().login():

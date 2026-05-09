@@ -7,7 +7,7 @@ import click
 import unicodedata
 from datetime import datetime
 from contextlib import contextmanager
-from opentdx.client.macQuotationClient import macQuotationClient
+from opentdx.client.macStandardClient import MacStandardClient as macQuotationClient
 from opentdx.const import MARKET
 from zoneinfo import ZoneInfo
 

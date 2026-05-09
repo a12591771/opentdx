@@ -1,7 +1,8 @@
 from .tdxClient import TdxClient
-from .client.quotationClient import QuotationClient
-from .client.exQuotationClient import exQuotationClient
-from .client.macQuotationClient import macQuotationClient, macExQuotationClient
+from .client.standardClient import StandardClient as QuotationClient
+from .client.extendedClient import ExtendedClient as exQuotationClient
+from .client.macStandardClient import MacStandardClient as macQuotationClient
+from .client.macExtendedClient import MacExtendedClient as macExQuotationClient
 from .const import (
     MARKET,
     CATEGORY,

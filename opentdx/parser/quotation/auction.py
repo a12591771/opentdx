@@ -17,7 +17,7 @@ class Auction(BaseParser):
 
         result = []
         for i in range(count):
-            time_raw, price, matched, unmatched, u, second = struct.unpack('<HfIIBB', data[i * 16 + 2: i * 16 + 18])
+            time_raw, price, matched, unmatched, u, second = struct.unpack('<HfIiBB', data[i * 16 + 2: i * 16 + 18])
             result.append({
                 'time': time(time_raw // 60, time_raw % 60, second),
                 'price': price,

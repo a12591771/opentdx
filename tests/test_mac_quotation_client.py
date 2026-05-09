@@ -1,4 +1,4 @@
-from opentdx.client import macQuotationClient
+from opentdx.client.macStandardClient import MacStandardClient as macQuotationClient
 from opentdx.const import ADJUST, BOARD_TYPE, CATEGORY, EX_BOARD_TYPE, EX_MARKET, MARKET, PERIOD, SORT_TYPE, SORT_ORDER
 import pandas as pd
 import pytest

@@ -21,41 +21,39 @@
 
 ## 主要功能
 
-| 功能 | 说明 | 新增 |
-|------|------| -|
-| 股票行情 | A股、创业板、科创板、北交所 | ✅支持北交所 | 
-| 扩展行情 | 期货、港股、美股、期权等 | ✅支持AH股关联查询 |
-| K线数据 | 多周期（1分/5分/日线/周线等）|  ✅支持复权、即时换手率 |
-| 分时图 | 实时/历史分时数据 | |
-| 排行榜 | 涨跌幅、振幅、换手率等 |  |
-| 板块数据 | 行业/地区/概念板块列表及成分股 | 🌟 板块K线数据 | 
-| 异动监控 | 主力监控精灵数据 | |
-| F10资料 | 公司基本信息、财报 | |
+| 功能 | 说明 |
+|------|------|
+| 股票行情 | A股、创业板、科创板、北交所 |
+| 扩展行情 | 期货、港股、美股、期权等 |
+| K线数据 | 多周期（1分/5分/日线/周线等），支持复权、即时换手率 |
+| 分时图 | 实时/历史分时数据 |
+| 排行榜 | 涨跌幅、振幅、换手率等 |
+| 板块数据 | 行业/地区/概念板块列表及成分股，板块K线 |
+| 异动监控 | 主力监控精灵数据 |
+| F10资料 | 公司基本信息、财报、除权分红 |
 
 ## 安装
 
 ```bash
 pip install opentdx
-
 ```
 
 ## 指南
 
 ```bash
-opentdx doc 
+opentdx doc      # 交互式接口文档（推荐入门）
+opentdx mm       # 实时市场异动监控
 ```
 
 ## 快速上手
 
 ```python
 from datetime import date
-
 import pandas as pd
 from opentdx.tdxClient import TdxClient
 from opentdx.const import MARKET, CATEGORY, EX_MARKET, PERIOD, SORT_TYPE
 
-if __name__ == "__main__":
-  with TdxClient() as client:
+with TdxClient() as client:
     # 指数信息
     print(pd.DataFrame(client.index_info([(MARKET.SH, '999999'), (MARKET.SZ, '399001')])))
     # 股票列表（带排序过滤）
@@ -66,36 +64,93 @@ if __name__ == "__main__":
     for name, board in client.stock_top_board().items():
         print(f"榜单：{name}")
         print(pd.DataFrame(board))
-    # 获取k线
+    # 获取K线
     print(pd.DataFrame(client.stock_kline(MARKET.SZ, '000001', PERIOD.DAILY)))
-    # 获取指数k线
+    # 多分钟K线
     print(pd.DataFrame(client.stock_kline(MARKET.SH, '999999', PERIOD.MINS, times=10)))
-    # 获取历史分时
+    # 历史分时
     print(pd.DataFrame(client.stock_tick_chart(MARKET.SZ, '000001', date(2026, 3, 16))))
-    # 获取个股F10
+    # 个股F10
     print(pd.DataFrame(client.stock_f10(MARKET.SZ, '000001')))
     # 历史成交
     print(pd.DataFrame(client.stock_transaction(MARKET.SZ, '000001', date(2024, 1, 15))))
-    
+
     # 期货K线
     print(pd.DataFrame(client.goods_kline(EX_MARKET.SH_FUTURES, 'AUL8', PERIOD.DAILY)))
-    # 获取扩展市场行情列表
+    # 扩展市场行情列表
     print(pd.DataFrame(client.goods_quotes_list(EX_MARKET.SH_FUTURES, count=5)))
-    # 获取美股K线
+    # 美股K线
     print(pd.DataFrame(client.goods_kline(EX_MARKET.US_STOCK, 'TSLA', PERIOD.DAILY)))
     # 美股行情
     print(pd.DataFrame(client.goods_quotes(EX_MARKET.US_STOCK, 'TSLA')))
 ```
 
-### 🌟 本项目亮点
+### MAC 协议（板块 / K线 / 逐笔成交 / 资金流向）
 
-- ✅ **整体重构**：更加简洁易读
-- ✅ **协议简化**：明确了一些协议的细节，更加清晰易懂
-- ✅ **自动选服**：自动检查服务器连接速度，并选择最快的服务器
-- ✅ **主力监控**：新增异动消息的获取
-- ✅ **板块列表**：像 `通达信`一样根据板块获取股票列表，支持 `深市`、`沪市`、`创业板`、`科创板`、`北交所`
-- ✅ **扩展行情**：支持 `期货`、`期权`、`债券`、`基金`、`港股`、`美股`等行情的获取
-- ✅ **交互式文档**：```python doc.py```一键开启项目探索
+```python
+from opentdx.client import macQuotationClient
+from opentdx.const import MARKET, PERIOD, BOARD_TYPE, ADJUST
+
+client = macQuotationClient()
+client.connect()
+
+# 板块列表
+boards = client.get_board_list(BOARD_TYPE.HY)
+
+# 板块成分股行情（按涨跌幅排序）
+stocks = client.get_board_members_quotes('880761', count=10)
+
+# 统一K线接口（A股/港股/美股通用）
+bars = client.get_symbol_bars(MARKET.SZ, '000001', PERIOD.DAILY, count=100, fq=ADJUST.QFQ)
+
+# 分时图
+chart = client.get_symbol_tick_chart(MARKET.SZ, '000001')
+
+# 多股实时行情
+quotes = client.get_symbol_quotes([(MARKET.SZ, '000001'), (MARKET.SH, '600000')])
+
+# 逐笔成交
+tx = client.get_symbol_transactions(MARKET.SZ, '000001', count=50)
+
+# 资金流向
+flow = client.get_symbol_zjlx('000001', MARKET.SZ)
+
+# 股票所属板块
+belong = client.get_symbol_belong_board('000001', MARKET.SZ)
+
+# 主力监控
+monitor = client.get_market_monitor(MARKET.SH, count=10)
+
+client.disconnect()
+```
+
+## 架构
+
+```
+opentdx/client/
+    transport.py          Transport — 纯网络传输层 (连接/收发/心跳/重试)
+    baseClient.py         BaseClient — 通用基础设施
+    standardClient.py     StandardClient — A股行情
+    extendedClient.py     ExtendedClient — 扩展市场行情
+    macMixin.py           MacQuotationMixin — MAC 板块/K线/分时/成交方法
+    macStandardClient.py  MacStandardClient — A股 + MAC 方法
+    macExtendedClient.py  MacExtendedClient — 扩展市场 + MAC 方法
+```
+
+- `TdxClient` 内部使用 `MacStandardClient` + `MacExtendedClient`，一个连接覆盖所有接口
+- MAC 方法直接可用，无需手动启用
+- 旧类名（`QuotationClient` / `macQuotationClient` 等）保持兼容
+
+### 亮点
+
+- ✅ **CLI 工具**：`opentdx doc` 交互式接口文档，`opentdx mm` 实时异动监控
+- ✅ **自动选服**：自动检测服务器连接速度，选择最快的服务器
+- ✅ **MAC 协议**：统一 K线/分时/成交/板块接口，A股港股美股通用
+- ✅ **主力监控**：市场异动实时推送
+- ✅ **板块行情**：行业/地区/概念板块成分股行情，支持任意字段排序
+- ✅ **扩展市场**：期货、期权、港股、美股等行情获取
+- ✅ **资金流向**：主力/散户资金流向，日/5日维度
+
 
 #量化交易 #TDX接口 #Python金融
 

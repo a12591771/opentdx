@@ -1,16 +1,17 @@
 import pytest
 
-from opentdx.client.exQuotationClient import exQuotationClient
-from opentdx.client.macQuotationClient import macQuotationClient,macExQuotationClient
-from opentdx.client.quotationClient import QuotationClient
+from opentdx.client.standardClient import StandardClient
+from opentdx.client.extendedClient import ExtendedClient
+from opentdx.client.macStandardClient import MacStandardClient
+from opentdx.client.macExtendedClient import MacExtendedClient
 from opentdx.tdxClient import TdxClient
 
 
 @pytest.fixture(scope="session")
 def tdx():
     client = TdxClient()
-    client.quotation_client = QuotationClient(True, True)
-    client.ex_quotation_client = exQuotationClient(True, True)
+    client.quotation_client = MacStandardClient(True, True)
+    client.ex_quotation_client = MacExtendedClient(True, True)
     client.quotation_client.connect().login()
     client.ex_quotation_client.connect().login()
     yield client
@@ -22,7 +23,7 @@ def tdx():
 
 @pytest.fixture(scope="session")
 def qc():
-    client = QuotationClient(True, True)
+    client = StandardClient(True, True)
     client.connect().login()
     yield client
     client.disconnect()
@@ -30,7 +31,7 @@ def qc():
 
 @pytest.fixture(scope="session")
 def eqc():
-    client = exQuotationClient(True, True)
+    client = ExtendedClient(True, True)
     client.connect().login()
     yield client
     client.disconnect()
@@ -38,21 +39,23 @@ def eqc():
 
 @pytest.fixture(scope="session")
 def mqc():
-    client = macQuotationClient(True, True)
-    client.connect()
-    yield client
-    client.disconnect()
-    
-@pytest.fixture(scope="session")
-def meqc():
-    client = macExQuotationClient(True, True)
+    client = MacStandardClient(True, True)
     client.connect()
     yield client
     client.disconnect()
 
+
+@pytest.fixture(scope="session")
+def meqc():
+    client = MacExtendedClient(True, True)
+    client.connect()
+    yield client
+    client.disconnect()
+
+
 @pytest.fixture(scope="session")
 def sp_qc():
-    client = QuotationClient(True, True)
-    client.sp().connect().login()
+    client = MacStandardClient(True, True)
+    client.connect().login()
     yield client
     client.disconnect()

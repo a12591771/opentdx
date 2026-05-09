@@ -1,20 +1,27 @@
 from datetime import date
 import math
-from typing import override
 
-from .baseStockClient import BaseStockClient, update_last_ack_time, _paginate, _normalize_code_list
-from .commonClientMixin import CommonClientMixin
+from .baseClient import BaseClient
+from .transport import update_last_ack_time, _paginate, _normalize_code_list
 from opentdx.utils.block_reader import BlockReader, BlockReader_TYPE_FLAT
-from opentdx.const import BLOCK_FILE_TYPE, CATEGORY, FILTER_TYPE, PERIOD, MARKET, SORT_TYPE, ADJUST, main_hosts
+from opentdx.const import (
+    ADJUST, BLOCK_FILE_TYPE, CATEGORY, FILTER_TYPE, MARKET, PERIOD, SORT_TYPE, main_hosts,
+)
 from opentdx.parser import quotation
 from opentdx.utils.log import log
 from opentdx.utils.cache import finance_cache
 
-class QuotationClient(BaseStockClient, CommonClientMixin):
-    def __init__(self, multithread=False, heartbeat=False, auto_retry=False, raise_exception=False):
-        super().__init__(multithread, heartbeat, auto_retry, raise_exception)
-        self.hosts = main_hosts
-        
+
+class StandardClient(BaseClient):
+    """标准行情客户端 (A股)"""
+
+    def __init__(self, multithread=False, heartbeat=False, auto_retry=False,
+                 raise_exception=False):
+        super().__init__(main_hosts, 7709, multithread, heartbeat, auto_retry, raise_exception)
+
+    def _do_heartbeat(self):
+        return self.call(quotation.HeartBeat())
+
     def login(self, show_info=False) -> bool:
         try:
             info = self.call(quotation.Login())
@@ -25,15 +32,10 @@ class QuotationClient(BaseStockClient, CommonClientMixin):
             log.error("login failed: %s", e)
             return False
 
-    @override
-    def doHeartBeat(self):
-        return self.call(quotation.HeartBeat())
-
     def quotes_adjustment(self, quotes_list: list[dict]) -> list[dict]:
         for quotes in quotes_list:
             for item in ['high', 'low', 'open', 'close', 'pre_close', 'neg_price']:
                 quotes[item] /= 100
-
             quotes['open_amount'] *= 100
             quotes['rise_speed'] = f'{(quotes["rise_speed"] / 100):.2f}%'
             for bid in quotes['handicap']['bid']:
@@ -44,7 +46,6 @@ class QuotationClient(BaseStockClient, CommonClientMixin):
             market = quotes.get('market')
             code = quotes.get('code')
             vol = quotes.get('vol')
-
             if market and code and vol:
                 cache_key = f"{market.value}_{code}"
                 try:
@@ -55,12 +56,10 @@ class QuotationClient(BaseStockClient, CommonClientMixin):
                             float_shares = finance_data.get('liutongguben')
                             if float_shares:
                                 finance_cache.set(cache_key, float_shares)
-
                     if float_shares:
                         quotes['turnover'] = round(vol * 100 / float_shares * 100, 2)
                 except Exception as e:
                     log.debug("获取流通股本失败 %s: %s", code, e)
-
         return quotes_list
 
     def _adjust_quotes_list(self, results: list[dict]) -> list[dict]:
@@ -94,21 +93,25 @@ class QuotationClient(BaseStockClient, CommonClientMixin):
     @update_last_ack_time
     def get_index_info(self, all_stock, code=None) -> list[dict]:
         all_stock = _normalize_code_list(all_stock, code)
-
         index_infos = []
         for market, code in all_stock:
             index_info = self.call(quotation.IndexInfo(market, code))
             for item in ['high', 'low', 'open', 'close', 'pre_close', 'diff']:
                 index_info[item] /= 100
             index_infos.append(index_info)
-
         return index_infos
 
-    def get_kline(self, market: MARKET, code: str, period: PERIOD, start: int = 0, count: int = 800, times: int = 1, adjust: ADJUST = ADJUST.NONE) -> list[dict]:
+    def get_kline(self, market: MARKET, code: str, period: PERIOD, start: int = 0,
+                  count: int = 800, times: int = 1, adjust: ADJUST = ADJUST.NONE) -> list[dict]:
         MAX_KLINE_COUNT = 800
         bars = []
         while len(bars) < count:
-            part = self.call(quotation.K_Line(market, code, period, times, start + len(bars), min((count - len(bars)), MAX_KLINE_COUNT), adjust))
+            part = self.call(quotation.K_Line(
+                market, code, period, times,
+                start + len(bars),
+                min((count - len(bars)), MAX_KLINE_COUNT),
+                adjust,
+            ))
             if not part:
                 break
             bars = [*part, *bars]
@@ -139,7 +142,8 @@ class QuotationClient(BaseStockClient, CommonClientMixin):
         return bars
 
     @update_last_ack_time
-    def get_tick_chart(self, market: MARKET, code: str, date: date = None, start: int = 0, count: int = 0xba00) -> list[dict]:
+    def get_tick_chart(self, market: MARKET, code: str, date: date = None,
+                       start: int = 0, count: int = 0xba00) -> list[dict]:
         if date is None:
             data = self.call(quotation.TickChart(market, code, start, count))
         else:
@@ -152,7 +156,8 @@ class QuotationClient(BaseStockClient, CommonClientMixin):
         return data
 
     @update_last_ack_time
-    def get_stock_quotes_details(self, code_list: MARKET | list[tuple[MARKET, str]], code=None) -> list[dict]:
+    def get_stock_quotes_details(self, code_list: MARKET | list[tuple[MARKET, str]],
+                                 code=None) -> list[dict]:
         code_list = _normalize_code_list(code_list, code)
         quotes_list = self.call(quotation.QuotesDetail(code_list))
         return self.quotes_adjustment(quotes_list)
@@ -166,7 +171,9 @@ class QuotationClient(BaseStockClient, CommonClientMixin):
         return boards
 
     @update_last_ack_time
-    def get_stock_quotes_list(self, category: CATEGORY, start:int = 0, count: int = 80, sort_type: SORT_TYPE = SORT_TYPE.CODE, reverse: bool = False, filter: list[FILTER_TYPE] | None = None) -> list[dict]:
+    def get_stock_quotes_list(self, category: CATEGORY, start: int = 0, count: int = 80,
+                              sort_type: SORT_TYPE = SORT_TYPE.CODE, reverse: bool = False,
+                              filter: list[FILTER_TYPE] | None = None) -> list[dict]:
         if filter is None:
             filter = []
         results = _paginate(
@@ -226,28 +233,20 @@ class QuotationClient(BaseStockClient, CommonClientMixin):
     @update_last_ack_time
     def get_company_info(self, market: MARKET, code: str) -> list[dict]:
         category = self.call(quotation.CompanyCategory(market, code))
-
         info = []
         for part in category:
-            content = self.call(quotation.CompanyContent(market, code, part['filename'], part['start'], part['length']))
-            info.append({
-                'name': part['name'],
-                'content': content['content'],
-            })
+            content = self.call(quotation.CompanyContent(
+                market, code, part['filename'], part['start'], part['length'],
+            ))
+            info.append({'name': part['name'], 'content': content['content']})
 
         xdxr = self.call(quotation.XDXR(market, code))
         if xdxr:
-            info.append({
-                'name': '除权分红',
-                'content': xdxr,
-            })
+            info.append({'name': '除权分红', 'content': xdxr})
 
         finance = self.call(quotation.Finance(market, code))
         if finance:
-            info.append({
-                'name': '财报',
-                'content': finance,
-            })
+            info.append({'name': '财报', 'content': finance})
         return info
 
     @update_last_ack_time
@@ -257,24 +256,21 @@ class QuotationClient(BaseStockClient, CommonClientMixin):
         except Exception as e:
             log.error(e)
             return None
-
         if not meta:
             return None
 
         size = meta['size']
         one_chunk = 0x7530
-
         file_content = bytearray()
         for seg in range(math.ceil(size / one_chunk)):
             start = seg * one_chunk
             piece_data = self.call(quotation.Block(block_file_type, start, one_chunk))["data"]
             file_content.extend(piece_data)
-
         return BlockReader().get_data(file_content, BlockReader_TYPE_FLAT)
 
     @update_last_ack_time
     def download_file(self, filename: str, filesize=0, report_hook=None) -> bytearray:
-        return super().download_file(quotation.FileDownload, filename, filesize, report_hook)
+        return self._download_file_impl(quotation.FileDownload, filename, filesize, report_hook)
 
     @update_last_ack_time
     def get_text_file(self, filename: str, sep: str = '|') -> list[str]:
