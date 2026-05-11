@@ -126,8 +126,9 @@ class StandardClient(BaseClient):
         index_infos = []
         for market, code in all_stock:
             index_info = self.call(quotation.IndexInfo(market, code))
+            divisor = self._get_divisor(market, code)
             for item in ['high', 'low', 'open', 'close', 'pre_close', 'diff']:
-                index_info[item] /= 100
+                index_info[item] /= divisor
             index_infos.append(index_info)
         return index_infos
 

@@ -7,6 +7,7 @@ from opentdx.parser.baseParser import BaseParser, register_parser
 @register_parser(0x122F, 1)
 class SymbolTransaction(BaseParser):
     def __init__(self, market: MARKET | EX_MARKET, code: str, count: int = 1000, start: int = 0, query_date: date = None):
+        self.is_ex = isinstance(market, EX_MARKET)
         ymd = query_date.year * 10000 + query_date.month * 100 + query_date.day if query_date else 0
         self.body = struct.pack("<H22sIIH10x", market.value, code.encode("gbk"), ymd, start, count)
 
@@ -26,7 +27,7 @@ class SymbolTransaction(BaseParser):
             })
 
         return {
-            "market": market,
+            "market": MARKET(market) if not self.is_ex else EX_MARKET(market),
             "code": code.decode("gbk", errors="ignore").replace('\x00', ''),
             "query_date": query_date,
             "count": count,

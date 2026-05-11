@@ -139,8 +139,8 @@ class MacQuotationMixin:
         security_list = []
         msg = f"TDX bar :{market} {code} {period} 查询总量{count} {start}  "
         log.debug(msg)
-        for start_pos in range(0, count, page_size):
-            current_count = min(page_size, count - start_pos)
+        for start_pos in range(start, start + count, page_size):
+            current_count = min(page_size, start + count - start_pos)
             parser = SymbolBar(market=market, code=code, period=period, times=times,
                                start=start_pos, count=current_count, fq=fq)
             result = self.call(parser)
