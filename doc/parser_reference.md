@@ -260,21 +260,31 @@
 | 0x2C | flag_bj | `<I` | 北交所标志 |
 | 0x30 | pe_ttm | `<f` | 市盈率TTM |
 | 0x31 | pe_static | `<f` | 市盈率(静) |
+| 0x38 | unknown_close_price | `<f` | 美股字段 |
+| 0x39 | bid_ask_ratio | `<f` | 委比（(买量-卖量)/(买量+卖量)*100%） |
 | 0x3B | change_20d_pct | `<f` | 20日涨幅% |
 | 0x3C | ytd_pct | `<f` | 年初至今% |
 | 0x41 | change_1y_pct | `<f` | 一年涨幅% |
 | 0x42 | prev_change_pct | `<f` | 昨涨幅% |
 | 0x4A | ah_code | `<I` | AH股对应代码 |
 | 0x57 | open_amount | `<f` | 开盘金额 |
-| 0x5C | consecutive_up_days | `<i` | 连涨天(负=连跌) |
+| 0x5C | consecutive_up_days | `<i` | 连涨天（正数连涨，负数连跌） |
+| 0x5D | limit_up_count | `<I` | 涨停数（股票中为买二的量） |
+| 0x5E | limit_down_count | `<I` | 跌停数（股票中为卖二的量） |
+| 0x5F | industry_sub | `<I` | 行业二级分类 |
 | 0x68 | vol_speed_pct | `<f` | 量涨速% |
 | 0x69 | short_turnover_pct | `<f` | 短换手% |
 | 0x6A | amount_2m | `<f` | 2分钟金额(元) |
 | 0x7A | auction_vol_ratio | `<f` | 竞价量比 |
 | 0x7D | today_indicator | `<f` | 近日指标提示(6:KDJ死叉, 92:阶段放量等) |
 | 0x85 | avg_price_copy | `<f` | 均价(备份) |
-| 0x88 | up_count | `<I` | 上涨家数 |
-| 0x8B | down_count | `<I` | 下跌家数 |
+| 0x86 | bid3_volume | `<I` | 买三量 |
+| 0x87 | bid4_volume | `<I` | 买四量 |
+| 0x88 | up_count | `<I` | 上涨家数（股票中为买五的量） |
+| 0x89 | ask3_volume | `<I` | 卖三量 |
+| 0x8A | ask4_volume | `<I` | 卖四量 |
+| 0x8B | down_count | `<I` | 下跌家数（股票中为卖五的量） |
+| 0x8C | bid_ask_diff | `<i` | 委差（买量-卖量） |
 | 0x8E | constant_neg_one | `<i` | 恒为-1 |
 
 ---

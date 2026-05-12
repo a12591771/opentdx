@@ -85,7 +85,8 @@ class FieldBit(IntEnum):
     PE_STATIC              = 0x31, '<f', '市盈率静'
     # 0x32-0x37 保留
     UNKNOWN_CLOSE_PRICE    = 0x38, '<f', '美股字段'
-    # 0x39-0x3A 保留
+    BID_ASK_RATIO          = 0x39, '<f', '委比'  # (买量-卖量)/(买量+卖量)*100%
+    # 0x3A 保留
     CHANGE_20D_PCT         = 0x3B, '<f', '20日涨幅%'
     YTD_PCT                = 0x3C, '<f', '年初至今%'
     # 0x3D-0x3F 保留
@@ -110,8 +111,8 @@ class FieldBit(IntEnum):
     ACTIVITY               = 0x59, '<I', '活跃度'
     # 0x5A-0x5B 保留
     CONSECUTIVE_UP_DAYS    = 0x5C, '<i', '连涨天'  # 正数连涨，负数连跌
-    LIMIT_UP_COUNT         = 0x5D, '<I', '涨停数'
-    LIMIT_DOWN_COUNT       = 0x5E, '<I', '跌停数'
+    LIMIT_UP_COUNT         = 0x5D, '<I', '涨停数（股票中为买二的量）'
+    LIMIT_DOWN_COUNT       = 0x5E, '<I', '跌停数（股票中为卖二的量）'
     INDUSTRY_SUB           = 0x5F, '<I', '行业二级分类'
     # 0x60-0x67 保留
     VOL_SPEED_PCT          = 0x68, '<f', '量涨速%'
@@ -122,8 +123,13 @@ class FieldBit(IntEnum):
     AUCTION_VOL_RATIO      = 0x7A, '<f', '竞价量比'
     TODAY_INDICATOR        = 0x7D, '<f', '近日指标提示' #6:KDJ死叉 92:阶段放量 #TODO导出TDX数据分析这个字段的所有枚举值
     AVG_PRICE_COPY         = 0x85, '<f', '均价(备份)'
-    UP_COUNT               = 0x88, '<I', '上涨家数'
-    DOWN_COUNT             = 0x8B, '<I', '下跌家数'
+    BID3_VOLUME            = 0x86, '<I', '买三量'
+    BID4_VOLUME            = 0x87, '<I', '买四量'
+    UP_COUNT               = 0x88, '<I', '上涨家数（股票中为买五的量）'
+    ASK3_VOLUME            = 0x89, '<I', '卖三量'
+    ASK4_VOLUME            = 0x8A, '<I', '卖四量'
+    DOWN_COUNT             = 0x8B, '<I', '下跌家数（股票中为卖五的量）'
+    BID_ASK_DIFF           = 0x8C, '<i', '委差'  # 买量-卖量
     CONSTANT_NEG_ONE       = 0x8E, '<i', '恒为-1'
 
 
