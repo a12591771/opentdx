@@ -199,7 +199,7 @@ class PresetField(Enum):
     HANDICAP = (FieldBit.BID_PRICE, FieldBit.BID2_PRICE, FieldBit.BID3_PRICE, FieldBit.BID4_PRICE, FieldBit.BID5_PRICE,
                 FieldBit.ASK_PRICE, FieldBit.ASK2_PRICE, FieldBit.ASK3_PRICE, FieldBit.ASK4_PRICE, FieldBit.ASK5_PRICE,
                 FieldBit.BID_VOLUME, FieldBit.BID2_VOLUME, FieldBit.BID3_VOLUME, FieldBit.BID4_VOLUME, FieldBit.BID5_VOLUME,
-                FieldBit.ASK_VOLUME, FieldBit.ASK2_VOLUME, FieldBit.ASK3_VOLUME, FieldBit.ASK4_VOLUME, FieldBit.ASK5_VOLUME)  # 十档盘口
+                FieldBit.ASK_VOLUME, FieldBit.ASK2_VOLUME, FieldBit.ASK3_VOLUME, FieldBit.ASK4_VOLUME, FieldBit.ASK5_VOLUME)  # 五档盘口
     COMMON = (FieldBit.PRE_CLOSE, FieldBit.OPEN, FieldBit.HIGH, FieldBit.LOW, FieldBit.CLOSE, FieldBit.VOL,
                FieldBit.VOL_RATIO, FieldBit.AMOUNT, FieldBit.TOTAL_SHARES, FieldBit.FLOAT_SHARES, FieldBit.EPS,
                FieldBit.NET_ASSETS, FieldBit.UNKNOWN_ACTION_PRICE, FieldBit.TOTAL_MARKET_CAP_AB, FieldBit.PE_DYNAMIC,

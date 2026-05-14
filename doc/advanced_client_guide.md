@@ -344,7 +344,7 @@ from opentdx.utils.bitmap import FieldBit, PresetField
 fields = PresetField.COMMON     # 常用字段
 fields = PresetField.ENHANCED   # 增强字段（含活跃度）
 fields = PresetField.BOARD_STATS  # 板块统计（涨停数、跌停数、上涨家数、下跌家数）
-fields = PresetField.HANDICAP   # 十档盘口（买卖5档价格+量）
+fields = PresetField.HANDICAP   # 五档盘口（买卖5档价格+量）
 fields = PresetField.FULL       # 全量字段
 
 # 自定义字段组合（FieldBit 支持 + 运算符）

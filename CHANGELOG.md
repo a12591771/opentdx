@@ -6,10 +6,10 @@
 
 ### Added
 
-- **十档盘口字段**：识别并命名买卖2-5档价格字段 `BID2_PRICE~BID5_PRICE` (0x48,0x80-0x82)、`ASK2_PRICE~ASK5_PRICE` (0x49,0x83-0x85)
+- **五档盘口字段**：识别并命名买卖2-5档价格字段 `BID2_PRICE~BID5_PRICE` (0x48,0x80-0x82)、`ASK2_PRICE~ASK5_PRICE` (0x49,0x83-0x85)
 - **主力资金流字段**：`MAIN_NET_AMOUNT` (0x38) 今日主力净流入、`MAIN_NET_3D_AMOUNT` (0x6F) 近三日/`MAIN_NET_5D_AMOUNT` (0x70) 近五日/`MAIN_NET_10D_AMOUNT` (0x71) 近十日主力净额、`MAIN_BUY_NET_AMOUNT` (0x72) 今日主买净额
 - **其他新字段**：`PREV2_CHANGE_PCT` (0x47) 前日涨幅%、`AUCTION_BUY_LIMIT`/`AUCTION_SELL_LIMIT` (0x66-0x67) 连续竞价上下限
-- **新增预设**：`PresetField.HANDICAP` — 十档盘口（20个价格+量字段）、`PresetField.DEBUG` — 全FF位图探测
+- **新增预设**：`PresetField.HANDICAP` — 五档盘口（20个价格+量字段）、`PresetField.DEBUG` — 全FF位图探测
 - **字段别名**：`BID2_VOLUME`/`ASK2_VOLUME`/`BID5_VOLUME`/`ASK5_VOLUME` 语义别名，与板块统计字段同值
 - **字段副本**：`MAIN_NET_AMOUNT_COPY` (0x6B) 与 0x38 同值
 
