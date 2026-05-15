@@ -240,6 +240,7 @@
 | 0x12 | ask_price | `<f` | 卖一价 |
 | 0x13 | server_update_date | `<I` | 服务器更新日期 |
 | 0x14 | server_update_time | `<I` | 服务器更新时间 |
+| 0x16 | board_strength | `<f` | 板块强度(涨跌家数差) |
 | 0x17 | dividend_yield | `<f` | 股息率 |
 | 0x18 | bid_volume | `<I` | 买量 |
 | 0x19 | ask_volume | `<I` | 卖量 |
@@ -279,11 +280,18 @@
 | 0x69 | short_turnover_pct | `<f` | 短换手% |
 | 0x6A | amount_2m | `<f` | 2分钟金额(元) |
 | 0x6B | main_net_amount_copy | `<f` | 今日主力净流入(副本) |
+| 0x6C | — | — | 待识别 |
+| 0x6D | retail_net_amount | `<f` | 散户单增比 |
+| 0x6E | main_net_5m_amount | `<f` | 5分钟主力净额 |
 | 0x6F | main_net_3d_amount | `<f` | 近三日主力净额 |
 | 0x70 | main_net_5d_amount | `<f` | 近五日主力净额 |
 | 0x71 | main_net_10d_amount | `<f` | 近十日主买金额(待确定) |
 | 0x72 | main_buy_net_amount | `<f` | 今日主买净额 |
-| 0x7A | auction_vol_ratio | `<f` | 竞价量比 |
+| 0x73 | ddx | `<f` | DDX |
+| 0x74 | ddy | `<f` | DDY |
+| 0x75 | ddz | `<f` | DDZ |
+| 0x76 | ddf | `<f` | DDF |
+| 0x7A | auction_vol_ratio | `<f` | 竞价昨比 |
 | 0x7D | recent_indicator | `<f` | 近日指标提示(6:KDJ死叉, 92:阶段放量等) |
 | 0x80 | bid3_price | `<f` | 买三价 |
 | 0x81 | bid4_price | `<f` | 买四价 |

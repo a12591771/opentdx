@@ -52,7 +52,7 @@ class FieldBit(IntEnum):
     SERVER_UPDATE_DATE     = 0x13, '<I', '服务器更新日期 YYYYMMDD'
     SERVER_UPDATE_TIME     = 0x14, '<I', '服务器更新时间 HHMMSS'
     LOT_SIZE_INFO          = 0x15, '<I', '未确定'  # 港股:240000500 美股:550000001
-    # 0x16 保留
+    BOARD_STRENGTH         = 0x16, '<f', '板块强度(涨跌家数差)'
     DIVIDEND_YIELD         = 0x17, '<f', '股息'
     BID_VOLUME             = 0x18, '<I', '买量'
     ASK_VOLUME             = 0x19, '<I', '卖量'
@@ -123,14 +123,20 @@ class FieldBit(IntEnum):
     SHORT_TURNOVER_PCT     = 0x69, '<f', '短换手%'
     AMOUNT_2M              = 0x6A, '<f', '2分钟金额(元)'
     MAIN_NET_AMOUNT_COPY   = 0x6B, '<f', '今日主力净流入(副本)'  # 与 0x38 相同
-    # 0x6C-0x6E 待识别
+    # 0x6C 待识别
+    RETAIL_NET_AMOUNT      = 0x6D, '<f', '散户单增比'
+    MAIN_NET_5M_AMOUNT     = 0x6E, '<f', '5分钟主力净额'
     MAIN_NET_3D_AMOUNT     = 0x6F, '<f', '近三日主力净额'
     MAIN_NET_5D_AMOUNT     = 0x70, '<f', '近五日主力净额'
     MAIN_NET_10D_AMOUNT    = 0x71, '<f', '近十日主买金额(待确定)'
     MAIN_BUY_NET_AMOUNT    = 0x72, '<f', '今日主买净额'
+    DDX                    = 0x73, '<f', 'DDX'
+    DDY                    = 0x74, '<f', 'DDY'
+    DDZ                    = 0x75, '<f', 'DDZ'
+    DDF                    = 0x76, '<f', 'DDF'
 
-    # ── 0x70-0x8F ──
-    AUCTION_VOL_RATIO      = 0x7A, '<f', '竞价量比'
+    # ── 0x77-0x8F ──
+    AUCTION_VOL_RATIO      = 0x7A, '<f', '竞价昨比'
     RECENT_INDICATOR       = 0x7D, '<f', '近日指标提示' #6:KDJ死叉 92:阶段放量 #TODO导出TDX数据分析这个字段的所有枚举值
     # 0x7E-0x7F 保留
     BID3_PRICE             = 0x80, '<f', '买三价'

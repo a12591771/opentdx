@@ -12,6 +12,11 @@
 - **新增预设**：`PresetField.HANDICAP` — 五档盘口（20个价格+量字段）、`PresetField.DEBUG` — 全FF位图探测
 - **字段别名**：`BID2_VOLUME`/`ASK2_VOLUME`/`BID5_VOLUME`/`ASK5_VOLUME` 语义别名，与板块统计字段同值
 - **字段副本**：`MAIN_NET_AMOUNT_COPY` (0x6B) 与 0x38 同值
+- **DDX/DDY/DDZ/DDF 字段**：`DDX` (0x73)、`DDY` (0x74)、`DDZ` (0x75)、`DDF` (0x76) 大单动向系列指标
+- **5分钟主力净额**：`MAIN_NET_5M_AMOUNT` (0x6E) 5分钟主力净额
+- **散户单增比**：`RETAIL_NET_AMOUNT` (0x6D) 散户单增比
+- **板块强度**：`BOARD_STRENGTH` (0x16) 板块强度(涨跌家数差)，仅板块指数有效
+- **更新字段注释**：`AUCTION_VOL_RATIO` (0x7A) 注释改为"竞价昨比"
 
 ### Changed
 
