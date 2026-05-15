@@ -53,7 +53,7 @@ class FieldBit(IntEnum):
     SERVER_UPDATE_TIME     = 0x14, '<I', '服务器更新时间 HHMMSS'
     LOT_SIZE_INFO          = 0x15, '<I', '未确定'  # 港股:240000500 美股:550000001
     BOARD_STRENGTH         = 0x16, '<f', '板块强度(涨跌家数差)'
-    DIVIDEND_YIELD         = 0x17, '<f', '股息'
+    DIVIDEND_YIELD         = 0x17, '<f', '每股股息(元)'
     BID_VOLUME             = 0x18, '<I', '买量'
     ASK_VOLUME             = 0x19, '<I', '卖量'
     LAST_VOLUME            = 0x1A, '<I', '现量'
@@ -109,7 +109,8 @@ class FieldBit(IntEnum):
     OPEN_AMOUNT            = 0x57, '<f', '开盘金额(元)'  # CSV显示为万元，需÷10000
     ANNUAL_LIMIT_UP_DAYS   = 0x58, '<i', '年涨停天数'
     ACTIVITY               = 0x59, '<I', '活跃度'
-    # 0x5A-0x5B 保留
+    # 0x5A 保留
+    DIVIDEND_YIELD_RATE    = 0x5B, '<f', '股息率%'
     CONSECUTIVE_UP_DAYS    = 0x5C, '<i', '连涨天'  # 正数连涨，负数连跌
     LIMIT_UP_COUNT         = 0x5D, '<I', '涨停数(板块) / 买二量(个股)'
     BID2_VOLUME            = 0x5D, '<I', '买二量(个股)'  # LIMIT_UP_COUNT 别名
@@ -123,7 +124,7 @@ class FieldBit(IntEnum):
     SHORT_TURNOVER_PCT     = 0x69, '<f', '短换手%'
     AMOUNT_2M              = 0x6A, '<f', '2分钟金额(元)'
     MAIN_NET_AMOUNT_COPY   = 0x6B, '<f', '今日主力净流入(副本)'  # 与 0x38 相同
-    # 0x6C 待识别
+    MAIN_NET_RATIO         = 0x6C, '<f', '主力净比%'
     RETAIL_NET_AMOUNT      = 0x6D, '<f', '散户单增比'
     MAIN_NET_5M_AMOUNT     = 0x6E, '<f', '5分钟主力净额'
     MAIN_NET_3D_AMOUNT     = 0x6F, '<f', '近三日主力净额'
@@ -136,6 +137,7 @@ class FieldBit(IntEnum):
     DDF                    = 0x76, '<f', 'DDF'
 
     # ── 0x77-0x8F ──
+    PREV_AMOUNT            = 0x7B, '<f', '昨成交额(元)'
     AUCTION_VOL_RATIO      = 0x7A, '<f', '竞价昨比'
     RECENT_INDICATOR       = 0x7D, '<f', '近日指标提示' #6:KDJ死叉 92:阶段放量 #TODO导出TDX数据分析这个字段的所有枚举值
     # 0x7E-0x7F 保留
@@ -154,10 +156,18 @@ class FieldBit(IntEnum):
     DOWN_COUNT             = 0x8B, '<I', '下跌家数(板块) / 卖五量(个股)'
     ASK5_VOLUME            = 0x8B, '<I', '卖五量(个股)'  # DOWN_COUNT 别名
     BID_ASK_DIFF           = 0x8C, '<i', '委差'  # 买量-卖量
+    CHANGE_UP_TYPE         = 0x8D, '<i', '封板状态(见 enums.ChangeUpType)'
     CONSTANT_NEG_ONE       = 0x8E, '<i', '恒为-1'
+    HIGHLIGHT_COUNT        = 0x8F, '<i', '亮点数'
 
-
-    
+    # ── 0x90-0x96: 日内时间涨幅(从昨收算) ──
+    CHANGE_AT_1000         = 0x90, '<f', '日内涨幅% 10:00'
+    CHANGE_AT_1030         = 0x91, '<f', '日内涨幅% 10:30'
+    CHANGE_AT_1100         = 0x92, '<f', '日内涨幅% 11:00'
+    CHANGE_AT_1130         = 0x93, '<f', '日内涨幅% 11:30'
+    CHANGE_AT_1330         = 0x94, '<f', '日内涨幅% 13:30'
+    CHANGE_AT_1400         = 0x95, '<f', '日内涨幅% 14:00'
+    CHANGE_AT_1430         = 0x96, '<f', '日内涨幅% 14:30'
 
 
 # 从 FieldBit 自动生成，保持向后兼容
