@@ -42,7 +42,7 @@ class FieldBit(IntEnum):
     FLOAT_SHARES           = 0x0B, '<f', '流通股(单位万)'  # 港股为H股数
     EPS                    = 0x0C, '<f', '每股收益'
     NET_ASSETS             = 0x0D, '<f', '净资产'
-    UNKNOWN_ACTION_PRICE   = 0x0E, '<f', '未知价'  # 国内通常为3/9/12, 美股港股与close相等
+    SECURITY_TYPE_PRICE    = 0x0E, '<f', '证券类型价'  # A股个股=3, ETF=12, 指数为小负数, 港美股=收盘价
     TOTAL_MARKET_CAP_AB    = 0x0F, '<f', 'AB股总市值'  # 港股代表H市值
 
     # ── 0x10-0x1F ──
@@ -66,14 +66,14 @@ class FieldBit(IntEnum):
     # ── 0x20-0x2F ──
     BUY_PRICE_LIMIT        = 0x20, '<f', '涨停价'
     SELL_PRICE_LIMIT       = 0x21, '<f', '跌停价'
-    UNKNOWN_34             = 0x22, '<I', '（港股通常为15）'
+    PRICE_DECIMAL_INFO      = 0x22, '<I', '价格精度标志'  # A股=0, 港美股=15
     LOT_SIZE               = 0x23, '<I', '所属地区板块(A股)/每手股数(港股)'
     PRE_IPOV               = 0x24, '<f', '昨IPOV'
     SPEED_PCT              = 0x25, '<f', '涨速'
     AVG_PRICE              = 0x26, '<f', '均价'
     IPOV                   = 0x27, '<f', 'IPOV'
-    PE_TTM_VOL_RELATED     = 0x28, '<f', '市盈率TTM（与vol相关）'
-    EX_PRICE_PLACEHOLDER   = 0x29, '<f', '收盘价占位（与amount相关）'
+    PE_TTM_VOL_RELATED     = 0x28, '<f', '前参考价(美股适用)'  # 美股接近close; A股返回异常值
+    EX_PRICE_PLACEHOLDER   = 0x29, '<f', '前金额参考'  # A股个股为百万级金额; 美股接近close; 指数ETF为0
     OPERATING_REVENUE      = 0x2A, '<f', '营业收入(万)'
     FLAG_KCB               = 0x2B, '<I', '科创板标志'  # 688开头→30101 300开头→50101
     FLAG_BJ                = 0x2C, '<I', '北交所标志'
@@ -84,13 +84,14 @@ class FieldBit(IntEnum):
     # ── 0x30-0x3F ──
     PE_TTM                 = 0x30, '<f', '市盈率TTM'
     PE_STATIC              = 0x31, '<f', '市盈率静'
-    # 0x32-0x37 保留
+    INDEX_METRIC           = 0x37, '<f', '指数指标'  # 仅指数有值(1.2~5.1); 个股/ETF=0
     MAIN_NET_AMOUNT        = 0x38, '<f', '今日主力净流入'
     BID_ASK_RATIO          = 0x39, '<f', '委比'  # (买量-卖量)/(买量+卖量)*100%
-    # 0x3A 保留
+    NON_INDEX_FLAG         = 0x3A, '<I', '非指数标志'  # 个股/ETF=5, 指数=0
     CHANGE_20D_PCT         = 0x3B, '<f', '20日涨幅%'
     YTD_PCT                = 0x3C, '<f', '年初至今%'
-    # 0x3D-0x3F 保留
+    STOCK_CLASS_CODE       = 0x3E, '<I', '证券子分类码'  # 个股有值(0~64), 指数/ETF部分有值
+    PERCENT_BASE           = 0x3F, '<I', '百分比基底'  # 恒为100
 
     # ── 0x40-0x4F ──
     MTD_PCT                = 0x40, '<f', '月初至今%'
@@ -136,11 +137,13 @@ class FieldBit(IntEnum):
     DDY                    = 0x74, '<f', 'DDY'
     DDZ                    = 0x75, '<f', 'DDZ'
     DDF                    = 0x76, '<f', 'DDF'
+    STOCK_FLAG_A           = 0x77, '<f', '个股标志位A'  # 布尔值(0/1); 与0x78完全一致
+    STOCK_FLAG_B           = 0x78, '<f', '个股标志位B(副本)'  # 与0x77完全一致
 
     # ── 0x77-0x8F ──
     PREV_AMOUNT            = 0x7B, '<f', '昨成交额(元)'
     AUCTION_VOL_RATIO      = 0x7A, '<f', '竞价昨比'
-    RECENT_INDICATOR       = 0x7D, '<f', '近日指标提示' #6:KDJ死叉 92:阶段放量 #TODO导出TDX数据分析这个字段的所有枚举值
+    RECENT_INDICATOR       = 0x7D, '<f', '近日指标提示'  # 整数码以float存储: 6=KDJ死叉 11=ETF类 51/52/91=个股类 92=阶段放量
     # 0x7E-0x7F 保留
     BID3_PRICE             = 0x80, '<f', '买三价'
     BID4_PRICE             = 0x81, '<f', '买四价'
@@ -219,10 +222,10 @@ class PresetField(Enum):
                 FieldBit.ASK_VOLUME, FieldBit.ASK2_VOLUME, FieldBit.ASK3_VOLUME, FieldBit.ASK4_VOLUME, FieldBit.ASK5_VOLUME)  # 五档盘口
     COMMON = (FieldBit.PRE_CLOSE, FieldBit.OPEN, FieldBit.HIGH, FieldBit.LOW, FieldBit.CLOSE, FieldBit.VOL,
                FieldBit.VOL_RATIO, FieldBit.AMOUNT, FieldBit.TOTAL_SHARES, FieldBit.FLOAT_SHARES, FieldBit.EPS,
-               FieldBit.NET_ASSETS, FieldBit.UNKNOWN_ACTION_PRICE, FieldBit.TOTAL_MARKET_CAP_AB, FieldBit.PE_DYNAMIC,
+               FieldBit.NET_ASSETS, FieldBit.SECURITY_TYPE_PRICE, FieldBit.TOTAL_MARKET_CAP_AB, FieldBit.PE_DYNAMIC,
                FieldBit.LOT_SIZE_INFO, FieldBit.DIVIDEND_YIELD, FieldBit.LAST_VOLUME,
-               FieldBit.TURNOVER, FieldBit.STOCK_TAG_FLAGS, FieldBit.DECIMAL_POINT, FieldBit.BUY_PRICE_LIMIT,
-               FieldBit.SELL_PRICE_LIMIT, FieldBit.UNKNOWN_34, FieldBit.LOT_SIZE, FieldBit.PRE_IPOV,
+               FieldBit.TURNOVER, FieldBit.SOME_BITMAP, FieldBit.DECIMAL_POINT, FieldBit.BUY_PRICE_LIMIT,
+               FieldBit.SELL_PRICE_LIMIT, FieldBit.PRICE_DECIMAL_INFO, FieldBit.LOT_SIZE, FieldBit.PRE_IPOV,
                 FieldBit.SPEED_PCT, FieldBit.FLAG_KCB, FieldBit.PE_TTM, FieldBit.PE_STATIC, FieldBit.MAIN_NET_AMOUNT,
                FieldBit.VOL_SPEED_PCT, FieldBit.SHORT_TURNOVER_PCT, FieldBit.CIRCULATING_CAPITAL_Z)
     DEBUG = (-1, '', '调试用全字段')  # 特例: 请求全字段(位图全1), 仅用于测试和调试, 不保证向后兼容 
