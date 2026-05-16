@@ -158,7 +158,7 @@ class FieldBit(IntEnum):
     ASK5_VOLUME            = 0x8B, '<I', '卖五量(个股)'  # DOWN_COUNT 别名
     BID_ASK_DIFF           = 0x8C, '<i', '委差'  # 买量-卖量
     CHANGE_UP_TYPE         = 0x8D, '<i', '封板状态(见 enums.ChangeUpType)'
-    CONSTANT_NEG_ONE       = 0x8E, '<i', '恒为-1'
+    STOCK_ENCODE           = 0x8E, '<i', '股票特征编码(位图, bits23/25/30恒为1, bits17-22因市场而异)'
     HIGHLIGHT_COUNT        = 0x8F, '<i', '亮点数'
 
     # ── 0x90-0x96: 日内时间涨幅(从昨收算) ──
@@ -225,7 +225,7 @@ class PresetField(Enum):
                FieldBit.SELL_PRICE_LIMIT, FieldBit.UNKNOWN_34, FieldBit.LOT_SIZE, FieldBit.PRE_IPOV,
                 FieldBit.SPEED_PCT, FieldBit.FLAG_KCB, FieldBit.PE_TTM, FieldBit.PE_STATIC, FieldBit.MAIN_NET_AMOUNT,
                FieldBit.VOL_SPEED_PCT, FieldBit.SHORT_TURNOVER_PCT, FieldBit.CIRCULATING_CAPITAL_Z)
-    DEBUG = ()
+    DEBUG = (-1, '', '调试用全字段')  # 特例: 请求全字段(位图全1), 仅用于测试和调试, 不保证向后兼容 
     ALL = tuple(FieldBit)
 
     def __add__(self, other) -> FieldSelection:
@@ -324,6 +324,17 @@ def get_active_fields_from_bitmap(bitmap_bytes: bytes) -> list[int]:
     return active_bits
 
 
+# ── 控制区(位128-159, 4字节) ──
+# 前16字节(位0-127)是字段位图, 后4字节(位128-159)是控制区:
+#   字节16(位128-135): 盘口深度(bid3_price~bid4_volume)
+#   字节17(位136-143): 排除/限流位
+#   字节18(位144-151): 日内涨幅(change_at_1000~1430)  
+#   字节19(位152-159): 控制字节(CTRL_EXTENDED等)
+
+CTRL_BYTE = 0       # 控制字节起始位(152)
+CTRL_EXTENDED = 1   # 非0=扩展模式(含北交所等)，0=标准模式(仅A股)
+
+
 def build_bitmap(fields: Fields) -> bytearray:
     """将字段选择转换为 20 字节请求位图"""
     if isinstance(fields, PresetField) and fields is PresetField.DEBUG:
@@ -333,3 +344,18 @@ def build_bitmap(fields: Fields) -> bytearray:
     for bit in selection:
         bitmap_int |= (1 << bit.value)
     return bytearray(bitmap_int.to_bytes(20, 'little'))
+
+
+def build_bitmap_new(fields: Fields) -> bytearray:
+    """将字段选择转换为 16 字节请求位图(位0-127), 控制区(位128-159)由调用方构建"""
+    if isinstance(fields, PresetField) and fields is PresetField.DEBUG:
+        bm = (1 << 128) - 1  # 设位0-127=1
+        return bytearray(bm.to_bytes(16, 'little'))
+    selection = normalize_fields(fields)
+    bitmap_int = 0
+    for bit in selection:
+        if bit.value >= 128:
+            continue  # 位128-159属于控制区, 不由字段位图处理
+        bitmap_int |= (1 << bit.value)
+    return bytearray(bitmap_int.to_bytes(16, 'little'))
+

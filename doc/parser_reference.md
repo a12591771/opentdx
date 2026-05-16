@@ -310,7 +310,7 @@
 | 0x8B | down_count / ask5_volume | `<I` | 下跌家数(板块) / 卖五量(个股) |
 | 0x8C | bid_ask_diff | `<i` | 委差（买量-卖量） |
 | 0x8D | change_up_type | `<i` | 封板状态(见 ChangeUpType 枚举) |
-| 0x8E | constant_neg_one | `<i` | 恒为-1 |
+| 0x8E | stock_encode | `<i` | 股票特征编码(位图) |
 | 0x8F | highlight_count | `<i` | 亮点数 |
 | 0x90 | change_at_1000 | `<f` | 日内涨幅% 10:00 |
 | 0x91 | change_at_1030 | `<f` | 日内涨幅% 10:30 |
