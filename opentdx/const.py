@@ -456,6 +456,8 @@ class BLOCK_FILE_TYPE(Enum):
     ZS = 'block_zs.dat'     # 指数板块
     FG = 'block_fg.dat'     # 风格板块
     GN = 'block_gn.dat'     # 概念板块
+    HK = 'hkblock.dat'      # 港股板块
+    JJ = 'jjblock.dat'      # 基金板块
 
 class BOARD_TYPE(Enum):
     HY = 0              #127 通达信普通行业一级分类

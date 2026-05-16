@@ -285,6 +285,22 @@ class StandardClient(BaseClient):
         return info
 
     @update_last_ack_time
+    def get_xdxr_info(self, market: MARKET, code: str) -> list[dict]:
+        return self.call(quotation.XDXR(market, code)) or []
+
+    @update_last_ack_time
+    def get_finance_info(self, market: MARKET, code: str) -> dict:
+        return self.call(quotation.Finance(market, code)) or {}
+
+    @update_last_ack_time
+    def get_company_info_category(self, market: MARKET, code: str) -> list[dict]:
+        return self.call(quotation.CompanyCategory(market, code)) or []
+
+    @update_last_ack_time
+    def get_company_info_content(self, market: MARKET, code: str, filename: str, start: int, length: int) -> dict:
+        return self.call(quotation.CompanyContent(market, code, filename, start, length)) or {}
+
+    @update_last_ack_time
     def get_block_file(self, block_file_type: BLOCK_FILE_TYPE):
         try:
             meta = self.call(quotation.FileMeta(block_file_type.value))

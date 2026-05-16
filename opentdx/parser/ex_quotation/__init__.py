@@ -3,8 +3,9 @@ from opentdx.parser.ex_quotation.chart_sampling import ChartSampling
 from opentdx.parser.ex_quotation.count import Count
 from opentdx.parser.ex_quotation.history_tick_chart import HistoryTickChart 
 from opentdx.parser.ex_quotation.history_transaction import HistoryTransaction 
-from opentdx.parser.ex_quotation.kline import K_Line 
-from opentdx.parser.ex_quotation.kline2 import K_Line2 
+from opentdx.parser.ex_quotation.kline import K_Line
+from opentdx.parser.ex_quotation.kline2 import K_Line2
+from opentdx.parser.ex_quotation.kline_by_date import KLineByDate
 from opentdx.parser.ex_quotation.list import List 
 from opentdx.parser.ex_quotation.quotes_list import QuotesList 
 from opentdx.parser.ex_quotation.quotes_single import QuotesSingle 
@@ -14,7 +15,7 @@ from opentdx.parser.ex_quotation.table_detail import TableDetail
 from opentdx.parser.ex_quotation.table import Table 
 from opentdx.parser.ex_quotation.tick_chart import TickChart 
 from opentdx.parser.ex_quotation.file import Download as FileDownload, Meta as FileMeta
-from opentdx.parser.ex_quotation.server import Login, Info as ServerInfo
+from opentdx.parser.ex_quotation.server import HeartBeat, Login, Info as ServerInfo
 
 __all__ = [
     'CategoryList',
@@ -24,6 +25,7 @@ __all__ = [
     'HistoryTransaction',
     'K_Line',
     'K_Line2',
+    'KLineByDate',
     'List',
     'QuotesList',
     'QuotesSingle',
@@ -34,6 +36,7 @@ __all__ = [
     'TickChart',
     'FileDownload',
     'FileMeta',
+    'HeartBeat',
     'Login',
     'ServerInfo',
 ]

@@ -3,6 +3,13 @@ from opentdx.parser.baseParser import BaseParser, register_parser
 import struct
 from typing import override
 
+@register_parser(0x4, 1)
+class HeartBeat(BaseParser):
+    @override
+    def deserialize(self, data):
+        (_, date) = struct.unpack('<6sI', data[:10])
+        return date
+
 @register_parser(0x2454, 1)
 class Login(BaseParser):
     def __init__(self):

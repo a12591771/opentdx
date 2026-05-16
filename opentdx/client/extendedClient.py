@@ -107,5 +107,18 @@ class ExtendedClient(BaseClient):
         return self.call(ex_quotation.ChartSampling(market, code))
 
     @update_last_ack_time
+    def get_history_instrument_bars_range(self, market: EX_MARKET, code: str, date1: int, date2: int) -> list[dict]:
+        """获取扩展市场日期范围 K 线（期货/港股/美股）。
+
+        Parameters
+        ----------
+        market : EX_MARKET
+        code : str
+        date1 : int  起始日期 YYYYMMDD，如 20170613
+        date2 : int  结束日期 YYYYMMDD，如 20170620
+        """
+        return self.call(ex_quotation.KLineByDate(market, code, date1, date2)) or []
+
+    @update_last_ack_time
     def download_file(self, filename: str, filesize=0, report_hook=None):
         return self._download_file_impl(ex_quotation.FileDownload, filename, filesize, report_hook)

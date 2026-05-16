@@ -4,6 +4,21 @@
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-05-17
+
+### Added
+
+- **TdxClient 新接口（标准行情）**：`stock_xdxr` 除权除息记录、`stock_finance` 财务数据、`stock_company_info_category` F10目录、`stock_company_info_content` F10章节内容、`stock_report_file` 服务器文件下载（tdxfin 等）
+- **TdxClient 新接口（扩展行情）**：`goods_kline_by_date` 日期范围 K 线（cmd 0x240d），支持期货/港股/美股
+- **StandardClient 新方法**：`get_xdxr_info` / `get_finance_info` / `get_company_info_category` / `get_company_info_content`，将原本仅在 `get_company_info` 内部使用的 parser 独立暴露为公开接口
+- **ExtendedClient 新方法**：`get_history_instrument_bars_range(market, code, date1, date2)` 日期范围 K 线
+- **新 parser**：`ex_quotation.KLineByDate` (`@register_parser(0x240d, 1)`)，请求体 `B9sHII`（市场+代码+类型+起止日期），响应跳过 12 字节 echo 后读 count
+- **BLOCK_FILE_TYPE**：新增 `HK = 'hkblock.dat'`、`JJ = 'jjblock.dat'`（本地文件路径用途，网络服务器不提供）
+
+### Fixed
+
+- **Bug**：`ex_quotation.HeartBeat` 缺失，扩展行情心跳线程启动后触发 `AttributeError`；在 `ex_quotation/server.py` 新增 `@register_parser(0x4, 1) class HeartBeat`，并导出至 `__init__.py`
+
 ## [0.2.4] - 2026-05-15
 
 ### Added

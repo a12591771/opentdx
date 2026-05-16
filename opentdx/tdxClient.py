@@ -543,13 +543,95 @@ class TdxClient:
         """
         return self.q_client().get_company_info(market, code)
 
+    def stock_xdxr(self, market: MARKET, code: str) -> list[dict]:
+        """获取除权除息记录。
+
+        Returns
+        -------
+        list[dict]
+            - ``market`` : MARKET     市场
+            - ``code`` : str         股票代码
+            - ``date`` : datetime    除权日期
+            - ``name`` : str         事件名称（除权除息/送配股上市/…）
+            - ``fenhong`` : float    每股分红
+            - ``peigujia`` : float   配股价
+            - ``songzhuangu`` : float 每股送转股
+            - ``peigu`` : float      每股配股
+        """
+        return self.q_client().get_xdxr_info(market, code)
+
+    def stock_finance(self, market: MARKET, code: str) -> dict:
+        """获取财务数据（流通股本/总股本/省份/行业等）。
+
+        Returns
+        -------
+        dict
+            - ``liutongguben`` : float  流通股本（万股）
+            - ``zongguben`` : float     总股本（万股）
+            - ``province`` : int        省份代码
+            - ``industry`` : int        行业代码
+            - ``updated_date`` : int    更新日期
+            - ``ipo_date`` : int        上市日期
+            - 以及其他财务字段
+        """
+        return self.q_client().get_finance_info(market, code)
+
+    def stock_company_info_category(self, market: MARKET, code: str) -> list[dict]:
+        """获取公司资料目录（F10 文件列表）。
+
+        Returns
+        -------
+        list[dict]
+            - ``name`` : str       章节名称
+            - ``filename`` : str   文件名
+            - ``start`` : int      起始位置
+            - ``length`` : int     数据长度
+        """
+        return self.q_client().get_company_info_category(market, code)
+
+    def stock_company_info_content(self, market: MARKET, code: str, filename: str, start: int, length: int) -> dict:
+        """获取公司资料内容（F10 指定章节）。
+
+        Parameters
+        ----------
+        market : MARKET
+        code : str
+        filename : str  来自 stock_company_info_category 返回的 filename 字段
+        start : int     来自 stock_company_info_category 返回的 start 字段
+        length : int    来自 stock_company_info_category 返回的 length 字段
+
+        Returns
+        -------
+        dict
+            - ``content`` : str   章节文本
+        """
+        return self.q_client().get_company_info_content(market, code, filename, start, length)
+
+    def stock_report_file(self, filename: str, filesize: int = 0, report_hook=None) -> bytearray:
+        """下载 TDX 财报文件（标准协议，如 tdxfin/gpcw.txt）。
+
+        Parameters
+        ----------
+        filename : str
+            服务器文件名，如 ``"tdxfin/gpcw.txt"``。
+        filesize : int
+            文件大小（0 表示自动获取）。
+        report_hook : callable, optional
+            进度回调 ``(downloaded, total)``。
+
+        Returns
+        -------
+        bytearray
+        """
+        return self.q_client().download_file(filename, filesize, report_hook)
+
     def stock_block(self, block_type: BLOCK_FILE_TYPE) -> list[dict]:
         """获取板块文件（板块 → 成分股对照表）。
 
         Parameters
         ----------
         block_type : BLOCK_FILE_TYPE
-            DEFAULT（一般）/ ZS（指数）/ FG（风格）/ GN（概念）
+            DEFAULT（一般）/ ZS（指数）/ FG（风格）/ GN（概念）/ HK（港股）/ JJ（基金）
 
         Returns
         -------
@@ -994,6 +1076,34 @@ class TdxClient:
             - ``bs_flag`` : int      方向: 0=买入 / 1=卖出 / 2=中性盘 / 5=盘后
         """
         return self.eq_client().get_symbol_transactions(market, code, count=2000, query_date=date)
+
+    def goods_kline_by_date(self, market: EX_MARKET, code: str, date1: int, date2: int) -> list[dict]:
+        """获取扩展市场日期范围 K 线（期货/港股/美股）。
+
+        Parameters
+        ----------
+        market : EX_MARKET
+            市场。如 EX_MARKET.SH_FUTURES / EX_MARKET.HK_MAIN_BOARD / EX_MARKET.US_STOCK
+        code : str
+            商品代码。
+        date1 : int
+            起始日期，YYYYMMDD 格式，如 20170613。
+        date2 : int
+            结束日期，YYYYMMDD 格式，如 20170620。
+
+        Returns
+        -------
+        list[dict]
+            - ``datetime`` : str         时间字符串（YYYY-MM-DD HH:MM）
+            - ``open`` : float           开盘价
+            - ``high`` : float           最高价
+            - ``low`` : float            最低价
+            - ``close`` : float          收盘价
+            - ``position`` : int         持仓量
+            - ``trade`` : int            成交量
+            - ``settlementprice`` : float 结算价
+        """
+        return self.eq_client().get_history_instrument_bars_range(market, code, date1, date2)
 
 
 if __name__ == '__main__':
