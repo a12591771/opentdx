@@ -301,11 +301,17 @@ class StandardClient(BaseClient):
         return self.call(quotation.CompanyContent(market, code, filename, start, length)) or {}
 
     @update_last_ack_time
-    def get_block_file(self, block_file_type: BLOCK_FILE_TYPE):
+    def get_block_file(self, block_file_type: BLOCK_FILE_TYPE) -> list[dict] | None:
+        """通过网络协议下载板块文件并解析。
+
+        DEFAULT / ZS / FG / GN 四种类型标准服务器均支持；HK / JJ 格式相同，部分服务器提供。
+        每条记录含 ``blockname`` (str)、``block_type`` (int)、``code_index`` (int)、``code`` (str)。
+        连接失败或服务器无此文件时返回 None。
+        """
         try:
             meta = self.call(quotation.FileMeta(block_file_type.value))
         except Exception as e:
-            log.error(e)
+            log.error("get_block_file FileMeta failed: %s", e)
             return None
         if not meta:
             return None
@@ -315,8 +321,11 @@ class StandardClient(BaseClient):
         file_content = bytearray()
         for seg in range(math.ceil(size / one_chunk)):
             start = seg * one_chunk
-            piece_data = self.call(quotation.Block(block_file_type, start, one_chunk))["data"]
-            file_content.extend(piece_data)
+            chunk = self.call(quotation.Block(block_file_type, start, one_chunk))
+            if chunk is None or 'data' not in chunk:
+                log.error("get_block_file chunk %d returned invalid response", seg)
+                return None
+            file_content.extend(chunk['data'])
         return BlockReader().get_data(file_content, BlockReader_TYPE_FLAT)
 
     @update_last_ack_time

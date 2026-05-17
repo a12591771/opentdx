@@ -40,6 +40,22 @@ from opentdx.const import (
 from opentdx.utils.bitmap import Fields
 
 
+def _to_date_int(d: int | str | date) -> int:
+    """将日期参数统一转为 YYYYMMDD 整数。
+
+    接受:
+    - int: 20230103 → 20230103
+    - str: '2023-01-03' 或 '20230103' → 20230103
+    - date: date(2023, 1, 3) → 20230103
+    """
+    if isinstance(d, int):
+        return d
+    if isinstance(d, date):
+        return int(d.strftime('%Y%m%d'))
+    s = str(d).replace('-', '').replace('/', '')
+    return int(s)
+
+
 class TdxClient:
     """
     通达信行情统一路由。
@@ -625,19 +641,27 @@ class TdxClient:
         """
         return self.q_client().download_file(filename, filesize, report_hook)
 
-    def stock_block(self, block_type: BLOCK_FILE_TYPE) -> list[dict]:
-        """获取板块文件（板块 → 成分股对照表）。
+    def stock_block(self, block_type: BLOCK_FILE_TYPE) -> list[dict] | None:
+        """获取板块文件（板块 → 成分股平铺列表）。
 
         Parameters
         ----------
         block_type : BLOCK_FILE_TYPE
-            DEFAULT（一般）/ ZS（指数）/ FG（风格）/ GN（概念）/ HK（港股）/ JJ（基金）
+            ``DEFAULT``（一般）/ ``ZS``（指数）/ ``FG``（风格）/ ``GN``（概念）均可从
+            标准行情服务器获取。``HK``（港股）/ ``JJ``（基金）格式相同，部分服务器提供，
+            服务器不支持时返回 ``None``。
 
         Returns
         -------
-        list[dict]
-            - ``block_name`` : str     板块名称
-            - ``stocks`` : list[str]   成分股代码列表
+        list[dict] | None
+            每条记录（一支股票在一个板块的关系）含：
+
+            - ``blockname``  : str   板块名称
+            - ``block_type`` : int   板块类型（来自文件内部分类字段）
+            - ``code_index`` : int   在板块内的序号
+            - ``code``       : str   股票代码
+
+            服务器无响应时返回 ``None``。
         """
         return self.q_client().get_block_file(block_type)
 
@@ -1077,7 +1101,13 @@ class TdxClient:
         """
         return self.eq_client().get_symbol_transactions(market, code, count=2000, query_date=date)
 
-    def goods_kline_by_date(self, market: EX_MARKET, code: str, date1: int, date2: int) -> list[dict]:
+    def goods_kline_by_date(
+        self,
+        market: EX_MARKET,
+        code: str,
+        date1: int | str | date,
+        date2: int | str | date,
+    ) -> list[dict]:
         """获取扩展市场日期范围 K 线（期货/港股/美股）。
 
         Parameters
@@ -1086,24 +1116,26 @@ class TdxClient:
             市场。如 EX_MARKET.SH_FUTURES / EX_MARKET.HK_MAIN_BOARD / EX_MARKET.US_STOCK
         code : str
             商品代码。
-        date1 : int
-            起始日期，YYYYMMDD 格式，如 20170613。
-        date2 : int
-            结束日期，YYYYMMDD 格式，如 20170620。
+        date1 : int | str | date
+            起始日期。支持 ``20170613``、``'2017-06-13'``、``date(2017, 6, 13)`` 三种形式。
+        date2 : int | str | date
+            结束日期。同 date1。
 
         Returns
         -------
         list[dict]
-            - ``datetime`` : str         时间字符串（YYYY-MM-DD HH:MM）
-            - ``open`` : float           开盘价
-            - ``high`` : float           最高价
-            - ``low`` : float            最低价
-            - ``close`` : float          收盘价
-            - ``position`` : int         持仓量
-            - ``trade`` : int            成交量
-            - ``settlementprice`` : float 结算价
+            - ``datetime`` : str          时间字符串（YYYY-MM-DD HH:MM）
+            - ``open`` : float            开盘价
+            - ``high`` : float            最高价
+            - ``low`` : float             最低价
+            - ``close`` : float           收盘价
+            - ``position`` : int          持仓量
+            - ``trade`` : int             成交量
+            - ``settlementprice`` : float  结算价
         """
-        return self.eq_client().get_history_instrument_bars_range(market, code, date1, date2)
+        return self.eq_client().get_history_instrument_bars_range(
+            market, code, _to_date_int(date1), _to_date_int(date2)
+        )
 
 
 if __name__ == '__main__':

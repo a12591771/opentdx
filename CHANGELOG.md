@@ -4,6 +4,16 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **`goods_kline_by_date` / `get_history_instrument_bars_range` 日期参数柔性化**：`date1`/`date2` 现在同时接受 `int`（20230103）、`str`（`'2023-01-03'`）、`datetime.date` 三种形式，与 QUANTAXIS 上层惯例对齐（`start_date='2023-01-03'`）；低层 `KLineByDate` parser 仍只接受 int
+
+### Fixed
+
+- **`get_block_file()` 分块循环防护**：原代码直接对 `self.call(...)["data"]` 取值，若服务器单次分块返回 None 会抛出 `TypeError`；现在检查 chunk 合法性后才提取 `data`，失败时返回 `None` 并记录错误日志
+- **`BLOCK_FILE_TYPE.HK` / `JJ` 支持网络下载**：`hkblock.dat` / `jjblock.dat` 与其他板块文件格式相同，通过标准 `Meta`(0x2c5) + `Download`(0x6b9) 协议从服务器获取，部分服务器提供，不可用时返回 `None`；`stock_block(BLOCK_FILE_TYPE.HK/JJ)` 同样支持
+- **`stock_block()` 文档字段名纠错**：`BlockReader_TYPE_FLAT` 实际返回 `blockname / block_type / code_index / code`（平铺），文档原写的 `block_name / stocks: list[str]`（嵌套格式）已更正
+
 ## [0.2.5] - 2026-05-17
 
 ### Added
@@ -13,7 +23,7 @@
 - **StandardClient 新方法**：`get_xdxr_info` / `get_finance_info` / `get_company_info_category` / `get_company_info_content`，将原本仅在 `get_company_info` 内部使用的 parser 独立暴露为公开接口
 - **ExtendedClient 新方法**：`get_history_instrument_bars_range(market, code, date1, date2)` 日期范围 K 线
 - **新 parser**：`ex_quotation.KLineByDate` (`@register_parser(0x240d, 1)`)，请求体 `B9sHII`（市场+代码+类型+起止日期），响应跳过 12 字节 echo 后读 count
-- **BLOCK_FILE_TYPE**：新增 `HK = 'hkblock.dat'`、`JJ = 'jjblock.dat'`（本地文件路径用途，网络服务器不提供）
+- **BLOCK_FILE_TYPE**：新增 `HK = 'hkblock.dat'`、`JJ = 'jjblock.dat'`，通过网络协议下载，部分服务器提供
 
 ### Fixed
 

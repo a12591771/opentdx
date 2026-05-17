@@ -1,6 +1,14 @@
 from datetime import date
 
 from .baseClient import BaseClient
+
+
+def _to_date_int(d: int | str | date) -> int:
+    if isinstance(d, int):
+        return d
+    if isinstance(d, date):
+        return int(d.strftime('%Y%m%d'))
+    return int(str(d).replace('-', '').replace('/', ''))
 from .transport import update_last_ack_time, _paginate, _normalize_code_list
 from opentdx.const import EX_MARKET, PERIOD, SORT_TYPE, ex_hosts
 from opentdx.parser import ex_quotation
@@ -107,17 +115,25 @@ class ExtendedClient(BaseClient):
         return self.call(ex_quotation.ChartSampling(market, code))
 
     @update_last_ack_time
-    def get_history_instrument_bars_range(self, market: EX_MARKET, code: str, date1: int, date2: int) -> list[dict]:
+    def get_history_instrument_bars_range(
+        self,
+        market: EX_MARKET,
+        code: str,
+        date1: int | str | date,
+        date2: int | str | date,
+    ) -> list[dict]:
         """获取扩展市场日期范围 K 线（期货/港股/美股）。
 
         Parameters
         ----------
         market : EX_MARKET
         code : str
-        date1 : int  起始日期 YYYYMMDD，如 20170613
-        date2 : int  结束日期 YYYYMMDD，如 20170620
+        date1 : int | str | date  起始日期，支持 20170613、'2017-06-13'、date(2017,6,13)
+        date2 : int | str | date  结束日期，同 date1
         """
-        return self.call(ex_quotation.KLineByDate(market, code, date1, date2)) or []
+        d1 = _to_date_int(date1)
+        d2 = _to_date_int(date2)
+        return self.call(ex_quotation.KLineByDate(market, code, d1, d2)) or []
 
     @update_last_ack_time
     def download_file(self, filename: str, filesize=0, report_hook=None):
