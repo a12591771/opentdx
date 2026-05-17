@@ -31,8 +31,7 @@
 
 ### Changed
 
-- **QUANTAXIS 集成验收完成**：2026-05-18 真实网络联调已验证 `stock_list=5208`、`index_list=1221`、`bond_list=2854`，并确认 stock / index 主链路可被 QUANTAXIS 适配层稳定消费
-- **`goods_kline_by_date` / `get_history_instrument_bars_range` 日期参数柔性化**：`date1`/`date2` 现在同时接受 `int`（20230103）、`str`（`'2023-01-03'`）、`datetime.date` 三种形式，与 QUANTAXIS 上层惯例对齐（`start_date='2023-01-03'`）；低层 `KLineByDate` parser 仍只接受 int
+- **`goods_kline_by_date` / `get_history_instrument_bars_range` 日期参数柔性化**：`date1`/`date2` 现在同时接受 `int`（20230103）、`str`（`'2023-01-03'`）、`datetime.date` 三种形式，便于直接使用常见日期输入形式；低层 `KLineByDate` parser 仍只接受 int
 
 ### Fixed
 

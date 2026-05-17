@@ -153,16 +153,6 @@ with TdxClient() as client:
 
 ---
 
-## QUANTAXIS 集成验证
-
-2026-05-18 已完成与 QUANTAXIS 的真实网络联调验证：
-
-- A 股列表接口可支撑 QUANTAXIS 列表适配层，实测 `stock_list=5208`、`index_list=1221`、`bond_list=2854`
-- `stock` / `index` 的 day、min、realtime、transaction 主链路已被 QUANTAXIS 侧真实验收
-- `bond` 当前已验证 list / realtime；day / min 仍取决于上游是否提供可用数据
-
----
-
 ## 文档
 
 | 文档 | 面向 | 说明 |
