@@ -1,5 +1,5 @@
 from opentdx.client.macStandardClient import MacStandardClient as macQuotationClient
-from opentdx.const import ADJUST, BOARD_TYPE, CATEGORY, EX_BOARD_TYPE, EX_MARKET, MARKET, PERIOD, SORT_TYPE, SORT_ORDER
+from opentdx.const import ADJUST, BOARD_TYPE, CATEGORY, EX_BOARD_TYPE, EX_MARKET, FILTER_TYPE, MARKET, PERIOD, SORT_TYPE, SORT_ORDER
 import pandas as pd
 from opentdx.utils.help import industry_to_board_symbol, ah_code_to_symbol, lot_size_to_symbol
 from datetime import time
@@ -65,6 +65,20 @@ class TestMacQuotationClientBoard:
         assert len(result) > 0
         
         
+    def test_exclude_bj_consistency(self, mqc):
+        total_a = mqc.count_board_members(CATEGORY.A)['total']
+        total_a_ex_bj = mqc.count_board_members(CATEGORY.A, exclude_flags=[FILTER_TYPE.BJ])['total']
+        total_bj = mqc.count_board_members(CATEGORY.BJ)['total']
+        assert total_a - total_a_ex_bj == total_bj, \
+            f"A股{total_a} - 排除北证{total_a_ex_bj} = {total_a - total_a_ex_bj} != 北证{total_bj}"
+
+    def test_exclude_kc_consistency(self, mqc):
+        total_a = mqc.count_board_members(CATEGORY.A)['total']
+        total_a_ex_kc = mqc.count_board_members(CATEGORY.A, exclude_flags=[FILTER_TYPE.KC])['total']
+        total_kcb = mqc.count_board_members(CATEGORY.KCB)['total']
+        assert total_a - total_a_ex_kc == total_kcb, \
+            f"A股{total_a} - 排除科创板{total_a_ex_kc} = {total_a - total_a_ex_kc} != 科创板{total_kcb}"
+
     def test_get_board_members_hkboard(self, meqc):
         result = meqc.get_board_members('HK0287', count=5)
         assert isinstance(result, list)

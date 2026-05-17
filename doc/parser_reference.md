@@ -241,7 +241,7 @@
 | 0x13 | server_update_date | `<I` | 服务器更新日期 |
 | 0x14 | server_update_time | `<I` | 服务器更新时间 |
 | 0x16 | board_strength | `<f` | 板块强度(涨跌家数差) |
-| 0x17 | dividend_yield | `<f` | 股息率 |
+| 0x17 | dividend_yield | `<f` | 每股股息(元) |
 | 0x18 | bid_volume | `<I` | 买量 |
 | 0x19 | ask_volume | `<I` | 卖量 |
 | 0x1A | last_volume | `<I` | 现量 |
@@ -259,6 +259,7 @@
 | 0x2A | operating_revenue | `<f` | 营业收入(万) |
 | 0x2B | flag_kcb | `<I` | 科创板标志 |
 | 0x2C | flag_bj | `<I` | 北交所标志 |
+| 0x2E | after_hours_volume | `<i` | 盘后量 |
 | 0x30 | pe_ttm | `<f` | 市盈率TTM |
 | 0x31 | pe_static | `<f` | 市盈率(静) |
 | 0x38 | main_net_amount | `<f` | 今日主力净流入 |
@@ -270,6 +271,7 @@
 | 0x47 | prev2_change_pct | `<f` | 前日涨幅% |
 | 0x4A | ah_code | `<I` | AH股对应代码 |
 | 0x57 | open_amount | `<f` | 开盘金额 |
+| 0x5B | dividend_yield_rate | `<f` | 股息率% |
 | 0x5C | consecutive_up_days | `<i` | 连涨天（正数连涨，负数连跌） |
 | 0x5D | limit_up_count / bid2_volume | `<I` | 涨停数(板块) / 买二量(个股) |
 | 0x5E | limit_down_count / ask2_volume | `<I` | 跌停数(板块) / 卖二量(个股) |
@@ -280,7 +282,7 @@
 | 0x69 | short_turnover_pct | `<f` | 短换手% |
 | 0x6A | amount_2m | `<f` | 2分钟金额(元) |
 | 0x6B | main_net_amount_copy | `<f` | 今日主力净流入(副本) |
-| 0x6C | — | — | 待识别 |
+| 0x6C | main_net_ratio | `<f` | 主力净比% |
 | 0x6D | retail_net_amount | `<f` | 散户单增比 |
 | 0x6E | main_net_5m_amount | `<f` | 5分钟主力净额 |
 | 0x6F | main_net_3d_amount | `<f` | 近三日主力净额 |
@@ -292,6 +294,7 @@
 | 0x75 | ddz | `<f` | DDZ |
 | 0x76 | ddf | `<f` | DDF |
 | 0x7A | auction_vol_ratio | `<f` | 竞价昨比 |
+| 0x7B | prev_amount | `<f` | 昨成交额(元) |
 | 0x7D | recent_indicator | `<f` | 近日指标提示(6:KDJ死叉, 92:阶段放量等) |
 | 0x80 | bid3_price | `<f` | 买三价 |
 | 0x81 | bid4_price | `<f` | 买四价 |
@@ -306,7 +309,16 @@
 | 0x8A | ask4_volume | `<I` | 卖四量 |
 | 0x8B | down_count / ask5_volume | `<I` | 下跌家数(板块) / 卖五量(个股) |
 | 0x8C | bid_ask_diff | `<i` | 委差（买量-卖量） |
-| 0x8E | constant_neg_one | `<i` | 恒为-1 |
+| 0x8D | change_up_type | `<i` | 封板状态(见 ChangeUpType 枚举) |
+| 0x8E | stock_encode | `<i` | 股票特征编码(位图) |
+| 0x8F | highlight_count | `<i` | 亮点数 |
+| 0x90 | change_at_1000 | `<f` | 日内涨幅% 10:00 |
+| 0x91 | change_at_1030 | `<f` | 日内涨幅% 10:30 |
+| 0x92 | change_at_1100 | `<f` | 日内涨幅% 11:00 |
+| 0x93 | change_at_1130 | `<f` | 日内涨幅% 11:30 |
+| 0x94 | change_at_1330 | `<f` | 日内涨幅% 13:30 |
+| 0x95 | change_at_1400 | `<f` | 日内涨幅% 14:00 |
+| 0x96 | change_at_1430 | `<f` | 日内涨幅% 14:30 |
 
 ---
 

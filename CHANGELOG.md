@@ -2,7 +2,32 @@
 
 所有值得关注的变化均记录于此。格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.0.0/)。
 
-## [Unreleased]
+## [0.2.5]
+
+### Added
+
+- **主力净比%**：`MAIN_NET_RATIO` (0x6C) 主力净比%
+- **股息率%**：`DIVIDEND_YIELD_RATE` (0x5B) 股息率%，与每股股息(0x17)区分
+- **亮点数**：`HIGHLIGHT_COUNT` (0x8F) 亮点数
+- **昨成交额**：`PREV_AMOUNT` (0x7B) 昨成交额(元)
+- **封板状态枚举**：`ChangeUpType` 枚举 + `CHANGE_UP_TYPE` (0x8D) 封板状态字段
+- **日内时间涨幅**：`CHANGE_AT_1000`~`CHANGE_AT_1430` (0x90-0x96) 各时间节点日内涨幅
+- **盘后量**：`AFTER_HOURS_VOLUME` (0x2E) 盘后量
+- **过滤类型**：`FILTER_TYPE.HK_CONNECT`(16), `FILTER_TYPE.BJ`(32), `FILTER_TYPE.APPROVAL`(64), `FILTER_TYPE.REGISTRATION`(128)
+- **排除位单测**：`test_count_board_members_exclude_bj`、`test_exclude_kc_consistency`
+
+### Changed
+
+- **字段注释**：`AUCTION_VOL_RATIO` (0x7A) 注释改为"竞价昨比"
+- **字段注释**：`DIVIDEND_YIELD` (0x17) 注释改为"每股股息(元)"，与股息率%(0x5B)区分
+- **统一过滤枚举**：删除 `BoardMemberFilter`，`FILTER_TYPE` 统一用于新旧协议（旧协议5位+MAC8位），修复 `FILTER_TYPE.BJ` 值 16→32
+- **重命名**：`STOCK_FLAGS` → `STOCK_TAG_FLAGS`（股票[融][通][创]标签），`decode_stock_flags()` → `decode_stock_tag_flags()`
+- **重命名**：`STOCK_ENCODE` → `SAFETY_SCORE`（确认该字段为通达信安全分，float编码范围1~100）
+- **注释修正**：`HK_CONNECT` 改为"排除互联互通标的(仅核准制,注册制互联互通不受此位影响)"
+
+### Removed
+
+- **`BoardMemberFilter` 枚举**：合并至 `FILTER_TYPE`
 
 ### Changed
 
@@ -34,6 +59,12 @@
 
 ### Added
 
+- **五档盘口字段**：识别并命名买卖2-5档价格字段 `BID2_PRICE~BID5_PRICE` (0x48,0x80-0x82)、`ASK2_PRICE~ASK5_PRICE` (0x49,0x83-0x85)
+- **主力资金流字段**：`MAIN_NET_AMOUNT` (0x38) 今日主力净流入、`MAIN_NET_3D_AMOUNT` (0x6F) 近三日/`MAIN_NET_5D_AMOUNT` (0x70) 近五日/`MAIN_NET_10D_AMOUNT` (0x71) 近十日主力净额、`MAIN_BUY_NET_AMOUNT` (0x72) 今日主买净额
+- **其他新字段**：`PREV2_CHANGE_PCT` (0x47) 前日涨幅%、`AUCTION_BUY_LIMIT`/`AUCTION_SELL_LIMIT` (0x66-0x67) 连续竞价上下限
+- **新增预设**：`PresetField.HANDICAP` — 五档盘口（20个价格+量字段）、`PresetField.DEBUG` — 全FF位图探测
+- **字段别名**：`BID2_VOLUME`/`ASK2_VOLUME`/`BID5_VOLUME`/`ASK5_VOLUME` 语义别名，与板块统计字段同值
+- **字段副本**：`MAIN_NET_AMOUNT_COPY` (0x6B) 与 0x38 同值
 - **DDX/DDY/DDZ/DDF 字段**：`DDX` (0x73)、`DDY` (0x74)、`DDZ` (0x75)、`DDF` (0x76) 大单动向系列指标
 - **5分钟主力净额**：`MAIN_NET_5M_AMOUNT` (0x6E) 5分钟主力净额
 - **散户单增比**：`RETAIL_NET_AMOUNT` (0x6D) 散户单增比
@@ -41,7 +72,9 @@
 
 ### Changed
 
-- **字段注释**：`AUCTION_VOL_RATIO` (0x7A) 注释改为"竞价昨比"
+- **字段重命名**：`BID`→`BID_PRICE` (0x11)、`ASK`→`ASK_PRICE` (0x12)、`LOW_COPY`→`BID2_PRICE` (0x48)、`LOW_COPY2`→`ASK2_PRICE` (0x49)、`AVG_PRICE_COPY`→`ASK5_PRICE` (0x85)、`UNKNOWN_CLOSE_PRICE`→`MAIN_NET_AMOUNT` (0x38)、`TODAY_INDICATOR`→`RECENT_INDICATOR` (0x7D)
+- **字段注释**：`UP_COUNT/DOWN_COUNT/LIMIT_UP_COUNT/LIMIT_DOWN_COUNT` 更新为板块/个股双语义注释
+- **未知字段命名**：从十进制 `unknown_field_71` 改为十六进制 `unknown_field_0x47`
 - **单测修复**：`bid`/`ask` → `bid_price`/`ask_price`
 
 ---

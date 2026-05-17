@@ -5,7 +5,7 @@ from datetime import date
 from .transport import update_last_ack_time, _paginate
 from opentdx.const import (
     ADJUST, BOARD_TYPE, CATEGORY, EX_BOARD_TYPE, EX_CATEGORY,
-    EX_MARKET, MARKET, PERIOD, SORT_TYPE, SORT_ORDER,
+    EX_MARKET, MARKET, PERIOD, SORT_TYPE, SORT_ORDER, FILTER_TYPE,
 )
 import math
 
@@ -53,6 +53,7 @@ class MacQuotationMixin:
         sort_type: SORT_TYPE = SORT_TYPE.CHANGE_PCT,
         sort_order=SORT_ORDER.DESC,
         fields: Fields | None = None,
+        exclude_flags: list[FILTER_TYPE] | None = None,
     ):
         MAX_LIST_COUNT = 80
         security_list = []
@@ -64,6 +65,7 @@ class MacQuotationMixin:
                 board_symbol=board_symbol, start=start, page_size=current_count,
                 sort_type=sort_type, sort_order=sort_order,
                 fields=fields if fields else PresetField.COMMON,
+                exclude_flags=exclude_flags,
             ))
             if not rs:
                 break
@@ -76,19 +78,22 @@ class MacQuotationMixin:
         return security_list
 
     @update_last_ack_time
-    def top_board_members(self, board_symbol: str | CATEGORY | EX_CATEGORY = "881001", count=20):
+    def top_board_members(self, board_symbol: str | CATEGORY | EX_CATEGORY = "881001", count=20,
+                          exclude_flags: list[FILTER_TYPE] | None = None):
         return self.get_board_members_quotes(
             board_symbol=board_symbol,
             count=count,
             sort_type=SORT_TYPE.ACTIVITY,
             sort_order=SORT_ORDER.DESC,
             fields=PresetField.ENHANCED,
+            exclude_flags=exclude_flags,
         )
 
     @update_last_ack_time
     def get_board_members(self, board_symbol: str | CATEGORY | EX_CATEGORY = "881001",
                           count=100000, sort_type: SORT_TYPE = SORT_TYPE.CODE,
-                          sort_order=SORT_ORDER.NONE):
+                          sort_order=SORT_ORDER.NONE,
+                          exclude_flags: list[FILTER_TYPE] | None = None):
         MAX_LIST_COUNT = 80
         security_list = []
         msg = f"TDX 板块成员：{board_symbol} 查询总量{count}"
@@ -98,6 +103,8 @@ class MacQuotationMixin:
             rs = self.call(BoardMembersQuotes(
                 board_symbol=board_symbol, start=start, page_size=current_count,
                 sort_type=sort_type, sort_order=sort_order,
+                fields=PresetField.NONE,
+                exclude_flags=exclude_flags,
             ))
             if not rs:
                 break
@@ -112,10 +119,12 @@ class MacQuotationMixin:
     @update_last_ack_time
     def count_board_members(self, board_symbol: str | CATEGORY | EX_CATEGORY = "881001",
                             count=1, sort_type: SORT_TYPE = SORT_TYPE.CODE,
-                            sort_order=SORT_ORDER.NONE):
+                            sort_order=SORT_ORDER.NONE,
+                            exclude_flags: list[FILTER_TYPE] | None = None):
         return self.call(BoardMembersQuotes(
             board_symbol=board_symbol, start=0, page_size=count,
-            sort_type=sort_type, sort_order=sort_order,
+            sort_type=sort_type, sort_order=sort_order, fields=PresetField.NONE,
+            exclude_flags=exclude_flags,
         ))
 
     @update_last_ack_time

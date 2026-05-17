@@ -325,3 +325,23 @@ def unpack_by_type(unusual_type: int, data: bytearray) -> tuple[str, str, int, f
         desc = "急速下跌"
         val = f"{v2*100:.2f}%"
     return desc, val, v1, v2, v3, v4
+
+
+STOCK_TAG_FLAGS_LABELS: dict[int, str] = {
+    1 << 0:  '沪深港通大盘',
+    1 << 1:  '融资融券',
+    1 << 2:  '沪港通',
+    1 << 3:  '深港通',
+    1 << 14: '含GDR',
+    1 << 15: '沪深港通小盘',
+    1 << 17: '沪深港通中盘',
+    1 << 20: 'ST/*ST',
+}
+
+
+def decode_stock_tag_flags(flags: int) -> list[str]:
+    """将 STOCK_TAG_FLAGS 位图解码为可读标签列表"""
+    return [label for bit, label in STOCK_TAG_FLAGS_LABELS.items() if flags & bit]
+
+
+

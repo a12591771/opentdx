@@ -380,11 +380,19 @@ class ADJUST(Enum):
 
 
 class FILTER_TYPE(Enum):
-    NEW = 1  # 未开板次新股
-    KC  = 2  # 科创板
-    ST  = 4  # ST股
-    CY  = 8  # 创业板
-    BJ  = 16 # 北证A股
+    """行情列表/板块成员过滤类型 — 位图值, 可组合
+
+    用于旧协议 QuotesList 的 filter 和 MAC 协议 BoardMembersQuotes 的 exclude_flags。
+    旧协议仅 HK_CONNECT 无效, 其余7位均可用; MAC协议全8位可用。
+    """
+    NEW         = 1     # 排除N新股 (bit0)
+    KC          = 2     # 排除科创板 (bit1)
+    ST          = 4     # 排除ST股票 (bit2)
+    CY          = 8     # 排除创业板 (bit3)
+    HK_CONNECT  = 16    # 排除互联互通标的(仅核准制, 注册制互联互通不受此位影响) (bit4)
+    BJ          = 32    # 排除北交所 (bit5)
+    APPROVAL    = 64    # 排除核准制股票 (bit6)
+    REGISTRATION = 128  # 排除注册制股票 (bit7)
 
 class SORT_TYPE(Enum):
     CODE = 0
