@@ -53,14 +53,14 @@ class FieldBit(IntEnum):
     SERVER_UPDATE_TIME     = 0x14, '<I', '服务器更新时间 HHMMSS'
     LOT_SIZE_INFO          = 0x15, '<I', '未确定'  # 港股:240000500 美股:550000001
     BOARD_STRENGTH         = 0x16, '<f', '板块强度(涨跌家数差)'
-    DIVIDEND_YIELD         = 0x17, '<f', '股息(含义待定)'  # 注: 真实股息率在0x5B; 此字段有负值,不是传统股息率
+    DIVIDEND_YIELD         = 0x17, '<f', '每股股息(元)'
     BID_VOLUME             = 0x18, '<I', '买量'
     ASK_VOLUME             = 0x19, '<I', '卖量'
     LAST_VOLUME            = 0x1A, '<I', '现量'
     TURNOVER               = 0x1B, '<f', '换手'
     INDUSTRY               = 0x1C, '<I', '行业分类代码'
     INDUSTRY_CHANGE_UP     = 0x1D, '<f', '行业涨跌幅'
-    SOME_BITMAP            = 0x1E, '<I', '位图'
+    STOCK_TAG_FLAGS        = 0x1E, '<I', '股票[融][通][创]标签位图(bit1:融资融券 bit2:沪港通 bit3:深港通 bit0/15:大小盘 bit14:含GDR bit20:ST/*ST)'
     DECIMAL_POINT          = 0x1F, '<I', '数据精度'
 
     # ── 0x20-0x2F ──
@@ -78,7 +78,7 @@ class FieldBit(IntEnum):
     FLAG_KCB               = 0x2B, '<I', '科创板标志'  # 688开头→30101 300开头→50101
     FLAG_BJ                = 0x2C, '<I', '北交所标志'
     CIRCULATING_CAPITAL_Z  = 0x2D, '<f', '流通股本Z（单位：万股）'
-    GEM_STAR_INFO          = 0x2E, '<f', '创业板/科创板数据'  # 仅300/688开头的股票有值; A股主板/ETF/指数=0
+    AFTER_HOURS_VOLUME     = 0x2E, '<i', '盘后量'
     # 0x2F 保留
 
     # ── 0x30-0x3F ──
@@ -111,7 +111,8 @@ class FieldBit(IntEnum):
     OPEN_AMOUNT            = 0x57, '<f', '开盘金额(元)'  # CSV显示为万元，需÷10000
     ANNUAL_LIMIT_UP_DAYS   = 0x58, '<i', '年涨停天数'
     ACTIVITY               = 0x59, '<I', '活跃度'
-    DIVIDEND_YIELD_PCT     = 0x5B, '<f', '股息率(%)'  # 经验证: 平安银行5.39% 长江电力3.71% 格力电器7.44%等
+    # 0x5A 保留
+    DIVIDEND_YIELD_RATE    = 0x5B, '<f', '股息率%'
     CONSECUTIVE_UP_DAYS    = 0x5C, '<i', '连涨天'  # 正数连涨，负数连跌
     LIMIT_UP_COUNT         = 0x5D, '<I', '涨停数(板块) / 买二量(个股)'
     BID2_VOLUME            = 0x5D, '<I', '买二量(个股)'  # LIMIT_UP_COUNT 别名
@@ -125,7 +126,7 @@ class FieldBit(IntEnum):
     SHORT_TURNOVER_PCT     = 0x69, '<f', '短换手%'
     AMOUNT_2M              = 0x6A, '<f', '2分钟金额(元)'
     MAIN_NET_AMOUNT_COPY   = 0x6B, '<f', '今日主力净流入(副本)'  # 与 0x38 相同
-    # 0x6C 待识别
+    MAIN_NET_RATIO         = 0x6C, '<f', '主力净比%'
     RETAIL_NET_AMOUNT      = 0x6D, '<f', '散户单增比'
     MAIN_NET_5M_AMOUNT     = 0x6E, '<f', '5分钟主力净额'
     MAIN_NET_3D_AMOUNT     = 0x6F, '<f', '近三日主力净额'
@@ -140,6 +141,7 @@ class FieldBit(IntEnum):
     STOCK_FLAG_B           = 0x78, '<f', '个股标志位B(副本)'  # 与0x77完全一致
 
     # ── 0x77-0x8F ──
+    PREV_AMOUNT            = 0x7B, '<f', '昨成交额(元)'
     AUCTION_VOL_RATIO      = 0x7A, '<f', '竞价昨比'
     RECENT_INDICATOR       = 0x7D, '<f', '近日指标提示'  # 整数码以float存储: 6=KDJ死叉 11=ETF类 51/52/91=个股类 92=阶段放量
     # 0x7E-0x7F 保留
@@ -158,11 +160,18 @@ class FieldBit(IntEnum):
     DOWN_COUNT             = 0x8B, '<I', '下跌家数(板块) / 卖五量(个股)'
     ASK5_VOLUME            = 0x8B, '<I', '卖五量(个股)'  # DOWN_COUNT 别名
     BID_ASK_DIFF           = 0x8C, '<i', '委差'  # 买量-卖量
-    CONSTANT_NEG_ONE       = 0x8E, '<i', '填充位(A股非-1)'  # 注: 当前<i>格式下A股个股返回~1.1e9, 指数/ETF返回-1082130432; 港美股不返回
-    STOCK_RATING           = 0x8F, '<f', '个股评级代码'  # 整数码以float存储(3~18); 仅个股有值, 指数ETF=0
+    CHANGE_UP_TYPE         = 0x8D, '<i', '封板状态(见 enums.ChangeUpType)'
+    SAFETY_SCORE        = 0x8E, '<f', '安全分(实际为单精度浮点, 范围1~100; 1=*ST, 负数=ETF等非股票)'
+    HIGHLIGHT_COUNT        = 0x8F, '<f', '亮点数'
 
-
-    
+    # ── 0x90-0x96: 日内时间涨幅(从昨收算) ──
+    CHANGE_AT_1000         = 0x90, '<f', '日内涨幅% 10:00'
+    CHANGE_AT_1030         = 0x91, '<f', '日内涨幅% 10:30'
+    CHANGE_AT_1100         = 0x92, '<f', '日内涨幅% 11:00'
+    CHANGE_AT_1130         = 0x93, '<f', '日内涨幅% 11:30'
+    CHANGE_AT_1330         = 0x94, '<f', '日内涨幅% 13:30'
+    CHANGE_AT_1400         = 0x95, '<f', '日内涨幅% 14:00'
+    CHANGE_AT_1430         = 0x96, '<f', '日内涨幅% 14:30'
 
 
 # 从 FieldBit 自动生成，保持向后兼容
@@ -215,11 +224,11 @@ class PresetField(Enum):
                FieldBit.VOL_RATIO, FieldBit.AMOUNT, FieldBit.TOTAL_SHARES, FieldBit.FLOAT_SHARES, FieldBit.EPS,
                FieldBit.NET_ASSETS, FieldBit.SECURITY_TYPE_PRICE, FieldBit.TOTAL_MARKET_CAP_AB, FieldBit.PE_DYNAMIC,
                FieldBit.LOT_SIZE_INFO, FieldBit.DIVIDEND_YIELD, FieldBit.LAST_VOLUME,
-               FieldBit.TURNOVER, FieldBit.SOME_BITMAP, FieldBit.DECIMAL_POINT, FieldBit.BUY_PRICE_LIMIT,
+               FieldBit.TURNOVER, FieldBit.STOCK_TAG_FLAGS, FieldBit.DECIMAL_POINT, FieldBit.BUY_PRICE_LIMIT,
                FieldBit.SELL_PRICE_LIMIT, FieldBit.PRICE_DECIMAL_INFO, FieldBit.LOT_SIZE, FieldBit.PRE_IPOV,
                 FieldBit.SPEED_PCT, FieldBit.FLAG_KCB, FieldBit.PE_TTM, FieldBit.PE_STATIC, FieldBit.MAIN_NET_AMOUNT,
                FieldBit.VOL_SPEED_PCT, FieldBit.SHORT_TURNOVER_PCT, FieldBit.CIRCULATING_CAPITAL_Z)
-    DEBUG = ()
+    DEBUG = (-1, '', '调试用全字段')  # 特例: 请求全字段(位图全1), 仅用于测试和调试, 不保证向后兼容 
     ALL = tuple(FieldBit)
 
     def __add__(self, other) -> FieldSelection:
@@ -318,6 +327,17 @@ def get_active_fields_from_bitmap(bitmap_bytes: bytes) -> list[int]:
     return active_bits
 
 
+# ── 控制区(位128-159, 4字节) ──
+# 前16字节(位0-127)是字段位图, 后4字节(位128-159)是控制区:
+#   字节16(位128-135): 盘口深度(bid3_price~bid4_volume)
+#   字节17(位136-143): 排除/限流位
+#   字节18(位144-151): 日内涨幅(change_at_1000~1430)  
+#   字节19(位152-159): 控制字节(CTRL_EXTENDED等)
+
+CTRL_BYTE = 0       # 控制字节起始位(152)
+CTRL_EXTENDED = 1   # 非0=扩展模式(含北交所等)，0=标准模式(仅A股)
+
+
 def build_bitmap(fields: Fields) -> bytearray:
     """将字段选择转换为 20 字节请求位图"""
     if isinstance(fields, PresetField) and fields is PresetField.DEBUG:
@@ -327,3 +347,18 @@ def build_bitmap(fields: Fields) -> bytearray:
     for bit in selection:
         bitmap_int |= (1 << bit.value)
     return bytearray(bitmap_int.to_bytes(20, 'little'))
+
+
+def build_bitmap_new(fields: Fields) -> bytearray:
+    """将字段选择转换为 16 字节请求位图(位0-127), 控制区(位128-159)由调用方构建"""
+    if isinstance(fields, PresetField) and fields is PresetField.DEBUG:
+        bm = (1 << 128) - 1  # 设位0-127=1
+        return bytearray(bm.to_bytes(16, 'little'))
+    selection = normalize_fields(fields)
+    bitmap_int = 0
+    for bit in selection:
+        if bit.value >= 128:
+            continue  # 位128-159属于控制区, 不由字段位图处理
+        bitmap_int |= (1 << bit.value)
+    return bytearray(bitmap_int.to_bytes(16, 'little'))
+
