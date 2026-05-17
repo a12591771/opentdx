@@ -161,8 +161,8 @@ class FieldBit(IntEnum):
     ASK5_VOLUME            = 0x8B, '<I', '卖五量(个股)'  # DOWN_COUNT 别名
     BID_ASK_DIFF           = 0x8C, '<i', '委差'  # 买量-卖量
     CHANGE_UP_TYPE         = 0x8D, '<i', '封板状态(见 enums.ChangeUpType)'
-    SAFETY_SCORE        = 0x8E, '<i', '安全分(实际为单精度浮点, 范围1~100; 1=*ST, 负数=ETF等非股票)'
-    HIGHLIGHT_COUNT        = 0x8F, '<i', '亮点数'
+    SAFETY_SCORE        = 0x8E, '<f', '安全分(实际为单精度浮点, 范围1~100; 1=*ST, 负数=ETF等非股票)'
+    HIGHLIGHT_COUNT        = 0x8F, '<f', '亮点数'
 
     # ── 0x90-0x96: 日内时间涨幅(从昨收算) ──
     CHANGE_AT_1000         = 0x90, '<f', '日内涨幅% 10:00'
@@ -224,7 +224,7 @@ class PresetField(Enum):
                FieldBit.VOL_RATIO, FieldBit.AMOUNT, FieldBit.TOTAL_SHARES, FieldBit.FLOAT_SHARES, FieldBit.EPS,
                FieldBit.NET_ASSETS, FieldBit.SECURITY_TYPE_PRICE, FieldBit.TOTAL_MARKET_CAP_AB, FieldBit.PE_DYNAMIC,
                FieldBit.LOT_SIZE_INFO, FieldBit.DIVIDEND_YIELD, FieldBit.LAST_VOLUME,
-               FieldBit.TURNOVER, FieldBit.SOME_BITMAP, FieldBit.DECIMAL_POINT, FieldBit.BUY_PRICE_LIMIT,
+               FieldBit.TURNOVER, FieldBit.STOCK_TAG_FLAGS, FieldBit.DECIMAL_POINT, FieldBit.BUY_PRICE_LIMIT,
                FieldBit.SELL_PRICE_LIMIT, FieldBit.PRICE_DECIMAL_INFO, FieldBit.LOT_SIZE, FieldBit.PRE_IPOV,
                 FieldBit.SPEED_PCT, FieldBit.FLAG_KCB, FieldBit.PE_TTM, FieldBit.PE_STATIC, FieldBit.MAIN_NET_AMOUNT,
                FieldBit.VOL_SPEED_PCT, FieldBit.SHORT_TURNOVER_PCT, FieldBit.CIRCULATING_CAPITAL_Z)
