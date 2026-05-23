@@ -10,6 +10,7 @@ from opentdx.parser.mac_quotation import (
     StockQuery, BatchStockData,
     StockDetail, StockBarCount, StockSmallInfo, KlineOffset,
 )
+from opentdx.utils.bitmap import PresetField
 
 class MacQuotationClient(BaseStockClient):
 
@@ -18,16 +19,30 @@ class MacQuotationClient(BaseStockClient):
         self.hosts = hosts or mac_hosts
 
     @update_last_ack_time
+    def get_board_count(self, market: Union[BOARD_TYPE, EX_BOARD_TYPE]) -> int:
+        """返回指定板块类型的板块总数"""
+        result = self.call(BoardList(market))
+        return result['total'] if result else 0
+
+    @update_last_ack_time
     def get_board_list(self, market: Union[BOARD_TYPE, EX_BOARD_TYPE], count=10000):
         return _paginate(
-            lambda s, c: self.call(BoardList(board_type=market, start=s, count=c)),
+            lambda s, c: self.call(BoardList(board_type=market, start=s, page_size=c))["items"],
             150, count,
         )
 
     @update_last_ack_time
     def get_board_members_quotes(self, board_symbol: str, count=10000):
         return _paginate(
-            lambda s, c: self.call(BoardMembersQuotes(board_symbol=board_symbol, start=s, count=c))["stocks"],
+            lambda s, c: self.call(BoardMembersQuotes(board_symbol=board_symbol, start=s, page_size=c, fields=PresetField.COMMON))["stocks"],
+            80, count,
+        )
+
+    @update_last_ack_time
+    def get_board_members(self, board_symbol: str, count=10000) -> list:
+        """返回板块成员列表（仅代码/名称，不含行情数据）"""
+        return _paginate(
+            lambda s, c: self.call(BoardMembersQuotes(board_symbol=board_symbol, start=s, page_size=c, fields=PresetField.NONE))["stocks"],
             80, count,
         )
 
