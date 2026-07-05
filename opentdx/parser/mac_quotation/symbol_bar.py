@@ -38,6 +38,11 @@ class SymbolBar(BaseParser):
         tail_offset = 33 + count * 36
         name, decimal, category, vol_unit, date_raw, time_raw, pre_close, open, high, low, close, momentum, vol, amount, tail_pad2, turnover, avg, industry = struct.unpack_from("<44sBHf5x2I5ffIf12s2fI", data, tail_offset)
 
+        if date_raw == 0:
+            tail_time = None
+        else:
+            tail_time = datetime(date_raw // 10000, (date_raw % 10000) // 100, date_raw % 100, time_raw // 10000, (time_raw % 10000) // 100, time_raw % 100)
+
         return {
             "market": MARKET(market) if not self.is_ex else EX_MARKET(market),
             "code": symbol.decode("gbk").rstrip('\x00'),
@@ -45,7 +50,7 @@ class SymbolBar(BaseParser):
             "decimal": decimal,
             "category": category,
             "vol_unit": vol_unit,
-            "time": datetime(date_raw // 10000, (date_raw % 10000) // 100, date_raw % 100, time_raw // 10000, (time_raw % 10000) // 100, time_raw % 100),
+            "time": tail_time,
             "pre_close": pre_close,
             "open": open,
             "high": high,
