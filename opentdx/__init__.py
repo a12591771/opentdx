@@ -15,12 +15,16 @@ from .const import (
     EX_BOARD_TYPE,
     EX_MARKET,
 )
+from .utils.tdxgp_reader import TdxgpReader, GPJY_META
 
 __all__ = [
     "TdxClient",
     "QuotationClient",
     "exQuotationClient",
     "macQuotationClient",
+    "macExQuotationClient",
+    "TdxgpReader",
+    "GPJY_META",
     "MARKET",
     "CATEGORY",
     "PERIOD",

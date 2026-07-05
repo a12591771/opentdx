@@ -78,7 +78,7 @@ class TestExQuotationClientData:
         assert isinstance(result, list)
         assert len(result) == 5
         for k in result:
-            assert 'date_time' in k and 'open' in k and 'close' in k
+            assert 'datetime' in k and 'open' in k and 'close' in k
             assert k['high'] >= k['low']
 
     def test_get_tick_chart(self, eqc):

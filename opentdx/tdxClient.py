@@ -654,6 +654,39 @@ class TdxClient:
         """
         return self.q_client().download_file(filename, filesize, report_hook)
 
+    def stock_tdxgp_index(self) -> list[dict]:
+        """下载并解析 TDXGP 股网交易事件索引文件。
+
+        一次性获取沪深北三个市场所有可用的 tdkgp 数据文件清单，
+        每个条目包含文件名、MD5 和文件大小。
+        可用于按需下载特定股票的 tdkgp 数据。
+
+        Returns
+        -------
+        list[dict]
+            - ``filename`` : str   gpsz000001.dat
+            - ``hash`` : str       MD5
+            - ``filesize`` : int   字节数
+        """
+        return self.q_client().get_tdxgp_index()
+
+    def stock_tdxgp_file(self, filename: str) -> bytearray:
+        """下载指定的 tdkgp 单股数据文件。
+
+        文件名可从 :meth:`stock_tdxgp_index` 中获取，或由代码拼接。
+
+        Parameters
+        ----------
+        filename : str
+            文件名，如 ``"gpsz000001.dat"`` 或 ``"gpsh600000.dat"`` 或 ``"gpbj430001.dat"``。
+
+        Returns
+        -------
+        bytearray
+            二进制内容，可直接传入 :class:`TdxgpReader` 解析。
+        """
+        return self.q_client().get_tdxgp_file(filename)
+
     def stock_block(self, block_type: BLOCK_FILE_TYPE) -> list[dict] | None:
         """获取板块文件（板块 → 成分股平铺列表）。
 

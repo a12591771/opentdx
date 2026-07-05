@@ -4,6 +4,7 @@ import math
 from .baseClient import BaseClient
 from .transport import update_last_ack_time, _paginate, _normalize_code_list
 from opentdx.utils.block_reader import BlockReader, BlockReader_TYPE_FLAT
+from opentdx.utils.tdxgp_reader import TdxgpReader
 from opentdx.const import (
     ADJUST, BLOCK_FILE_TYPE, CATEGORY, FILTER_TYPE, MARKET, PERIOD, SORT_TYPE, main_hosts,
 )
@@ -359,3 +360,36 @@ class StandardClient(BaseClient):
     def get_text_file(self, filename: str, sep: str = '|') -> list[str]:
         file_content = self.download_file(filename).decode("gbk", errors="replace")
         return [line.split(sep) for line in file_content.split('\n') if line.strip()]
+
+    @update_last_ack_time
+    def get_tdxgp_index(self) -> list[dict]:
+        """下载并解析 TDXGP 索引文件 (tdxgp/gpszsh.txt)。
+
+        一次请求返回沪深北三个市场的所有 tdkgp 文件清单。
+
+        Returns
+        -------
+        list[dict]
+            每条包含：
+            - ``filename`` : str   文件名 (gpsz000001.dat)
+            - ``hash`` : str       MD5
+            - ``filesize`` : int   文件大小
+        """
+        content = self.download_file("tdxgp/gpszsh.txt")
+        return TdxgpReader.parse_index(content)
+
+    @update_last_ack_time
+    def get_tdxgp_file(self, filename: str) -> bytearray:
+        """下载指定的 tdkgp 单股数据文件。
+
+        Parameters
+        ----------
+        filename : str
+            文件名，如 "gpsz000001.dat"。
+
+        Returns
+        -------
+        bytearray
+            二进制内容。
+        """
+        return self.download_file(f"tdxgp/{filename}")

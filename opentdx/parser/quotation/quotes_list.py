@@ -7,7 +7,7 @@ from opentdx.utils.help import format_time, get_price
 
 @register_parser(0x54b)
 class QuotesList(BaseParser):
-    def __init__(self, category: CATEGORY, start: int = 0, count: int = 0x50, sort_type: SORT_TYPE = SORT_TYPE.CODE, reverse: bool = False, filter: list[FILTER_TYPE] | None = None):
+    def __init__(self, category: CATEGORY, start: int = 0, count: int = 0x50, sort_type: SORT_TYPE = SORT_TYPE.CODE, reverse: bool = False, filter_types: list[FILTER_TYPE] | None = None):
         sort_reverse = 0 if sort_type == SORT_TYPE.CODE else 2 if reverse else 1
 
         filter_raw = 0

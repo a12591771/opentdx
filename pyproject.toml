@@ -34,3 +34,8 @@ include = ["opentdx*"]
 
 [project.scripts]
 opentdx = "opentdx.cli:cli"
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: tests that require a real TDX network connection",
+]
