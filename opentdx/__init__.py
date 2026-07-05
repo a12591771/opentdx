@@ -16,6 +16,7 @@ from .const import (
     EX_MARKET,
 )
 from .utils.tdxgp_reader import TdxgpReader, GPJY_META
+from .utils.gpcw_reader import GpcwReader, GCW_COLUMNS
 
 __all__ = [
     "TdxClient",
@@ -25,6 +26,8 @@ __all__ = [
     "macExQuotationClient",
     "TdxgpReader",
     "GPJY_META",
+    "GpcwReader",
+    "GCW_COLUMNS",
     "MARKET",
     "CATEGORY",
     "PERIOD",
