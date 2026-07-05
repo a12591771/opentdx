@@ -8,10 +8,15 @@ from opentdx.enums import IndustryCode
 from opentdx.utils.log import log
 
 def combine_to_datetime(ymd, date_num, format_tdx_time=False):
+    """将 TDX 日期数字和时间偏移合并为 datetime；ymd=0 时返回 None。"""
+    if ymd is None or ymd == 0:
+        return None
     date_str = str(ymd)
     year, month, day = int(date_str[:4]), int(date_str[4:6]), int(date_str[6:8])
     hours = date_num // 3600
     minutes = (date_num % 3600) // 60
+    if year == 0:
+        return None
     dt = datetime(year, month, day, hours, minutes)
     if format_tdx_time and 0 <= dt.hour <= 5:
         dt += timedelta(days=1)

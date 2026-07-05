@@ -21,8 +21,11 @@ class SymbolBar(BaseParser):
         for i in range(count):
             ymd, time_num, open, high, low, close, amount, vol, float_shares = struct.unpack_from("<II7f", data, 33 + i * 36)
 
+            bar_dt = combine_to_datetime(ymd, time_num, period < 4 or period == 7 or period == 8)
+            if bar_dt is None:
+                continue  # 跳过 ymd=0 的空 bar
             charts.append({
-                "datetime": combine_to_datetime(ymd, time_num, period < 4 or period == 7 or period == 8),
+                "datetime": bar_dt,
                 "open": open,
                 "high": high,
                 "low": low,
