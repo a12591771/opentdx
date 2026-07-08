@@ -33,11 +33,13 @@ from datetime import date
 
 from opentdx.client.macStandardClient import MacStandardClient
 from opentdx.client.macExtendedClient import MacExtendedClient
+from opentdx.client.standardClient import StandardClient
 from opentdx.const import (
     ADJUST, BLOCK_FILE_TYPE, BOARD_TYPE, CATEGORY, EX_BOARD_TYPE, EX_MARKET,
-    FILTER_TYPE, MARKET, PERIOD, SORT_ORDER, SORT_TYPE,
+    FILTER_TYPE, MARKET, PERIOD, SORT_ORDER, SORT_TYPE, file_hosts,
 )
 from opentdx.utils.bitmap import Fields
+from opentdx.utils.tdxgp_reader import TdxgpReader
 
 
 def _to_date_int(d: int | str | date) -> int:
@@ -68,6 +70,7 @@ class TdxClient:
     def __init__(self):
         self._quotation_client = None
         self._ex_quotation_client = None
+        self._file_client = None
 
     # ---- 上下文管理器 ----
 
@@ -81,6 +84,8 @@ class TdxClient:
             self._quotation_client.disconnect()
         if self._ex_quotation_client and self._ex_quotation_client.connected:
             self._ex_quotation_client.disconnect()
+        if self._file_client and self._file_client.connected:
+            self._file_client.disconnect()
 
     # ---- 内部 ----
 
@@ -99,6 +104,20 @@ class TdxClient:
         elif not self._ex_quotation_client.connected:
             self._ex_quotation_client.connect().login()
         return self._ex_quotation_client
+
+    def file_client(self):
+        """获取 TDX 文件包下载客户端（tdxfin/tdxgp 专用线路）。"""
+        if self._file_client is None:
+            self._file_client = StandardClient(True, True)
+            self._file_client._t.hosts = file_hosts
+            connected = self._file_client.connect()
+            if connected is None or connected.login() is False:
+                raise ConnectionError("TDX 文件包下载线路登录失败")
+        elif not self._file_client.connected:
+            connected = self._file_client.connect()
+            if connected is None or connected.login() is False:
+                raise ConnectionError("TDX 文件包下载线路登录失败")
+        return self._file_client
 
     # ================================================================
     #  A股 — 市场概况
@@ -637,12 +656,12 @@ class TdxClient:
         return self.q_client().get_company_info_content(market, code, filename, start, length)
 
     def stock_report_file(self, filename: str, filesize: int = 0, report_hook=None) -> bytearray:
-        """下载 TDX 财报文件（标准协议，如 tdxfin/gpcw.txt）。
+        """下载 TDX 财报/GP 文件包（标准协议，如 tdxfin/gpcw.txt）。
 
         Parameters
         ----------
         filename : str
-            服务器文件名，如 ``"tdxfin/gpcw.txt"``。
+            服务器文件名，如 ``"tdxfin/gpcw.txt"`` 或 ``"tdxgp/gpszsh.txt"``。
         filesize : int
             文件大小（0 表示自动获取）。
         report_hook : callable, optional
@@ -652,7 +671,7 @@ class TdxClient:
         -------
         bytearray
         """
-        return self.q_client().download_file(filename, filesize, report_hook)
+        return self.file_client().download_file(filename, filesize, report_hook)
 
     def stock_tdxgp_index(self) -> list[dict]:
         """下载并解析 TDXGP 股网交易事件索引文件。
@@ -668,7 +687,8 @@ class TdxClient:
             - ``hash`` : str       MD5
             - ``filesize`` : int   字节数
         """
-        return self.q_client().get_tdxgp_index()
+        content = self.stock_report_file("tdxgp/gpszsh.txt")
+        return TdxgpReader.parse_index(content)
 
     def stock_tdxgp_file(self, filename: str) -> bytearray:
         """下载指定的 tdkgp 单股数据文件。
@@ -685,7 +705,7 @@ class TdxClient:
         bytearray
             二进制内容，可直接传入 :class:`TdxgpReader` 解析。
         """
-        return self.q_client().get_tdxgp_file(filename)
+        return self.stock_report_file(f"tdxgp/{filename}")
 
     def stock_block(self, block_type: BLOCK_FILE_TYPE) -> list[dict] | None:
         """获取板块文件（板块 → 成分股平铺列表）。
