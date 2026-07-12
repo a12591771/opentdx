@@ -38,6 +38,7 @@ from opentdx.const import (
     ADJUST, BLOCK_FILE_TYPE, BOARD_TYPE, CATEGORY, EX_BOARD_TYPE, EX_MARKET,
     FILTER_TYPE, MARKET, PERIOD, SORT_ORDER, SORT_TYPE, file_hosts,
 )
+from opentdx.server_router import DEFAULT_SERVER_ROUTER, ServerRoundRobin
 from opentdx.utils.bitmap import Fields
 from opentdx.utils.tdxgp_reader import TdxgpReader
 
@@ -67,7 +68,8 @@ class TdxClient:
     - ``ex_quotation_client`` : MacExtendedClient — 扩展市场 + MAC 协议（期货/港股/美股）
     """
 
-    def __init__(self):
+    def __init__(self, server_router: ServerRoundRobin | None = DEFAULT_SERVER_ROUTER):
+        self._server_router = server_router
         self._quotation_client = None
         self._ex_quotation_client = None
         self._file_client = None
@@ -75,8 +77,8 @@ class TdxClient:
     # ---- 上下文管理器 ----
 
     def __enter__(self):
-        self.q_client().connect().login()
-        self.eq_client().connect().login()
+        self._connect_and_login(self.q_client(), "A股行情")
+        self._connect_and_login(self.eq_client(), "扩展行情")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -89,20 +91,38 @@ class TdxClient:
 
     # ---- 内部 ----
 
+    @staticmethod
+    def _connect_and_login(client, label):
+        connected = client.connect()
+        if connected is None:
+            raise ConnectionError(f"{label}服务器连接失败")
+        if connected.login() is False:
+            raise ConnectionError(f"{label}服务器登录失败")
+
     def q_client(self):
-        """获取 A股 客户端（首次访问时创建，断开时自动重连并登录）。"""
+        """获取 A股 客户端（首次访问时轮询绑定服务器，断开时原址重连）。"""
         if self._quotation_client is None:
-            self._quotation_client = MacStandardClient(True, True)
+            server = (
+                self._server_router.next_standard()
+                if self._server_router is not None
+                else None
+            )
+            self._quotation_client = MacStandardClient(True, True, server=server)
         elif not self._quotation_client.connected:
-            self._quotation_client.connect().login()
+            self._connect_and_login(self._quotation_client, "A股行情")
         return self._quotation_client
 
     def eq_client(self):
-        """获取 扩展市场 客户端（首次访问时创建，断开时自动重连并登录）。"""
+        """获取扩展市场客户端（首次访问时轮询绑定服务器，断开时原址重连）。"""
         if self._ex_quotation_client is None:
-            self._ex_quotation_client = MacExtendedClient(True, True)
+            server = (
+                self._server_router.next_extended()
+                if self._server_router is not None
+                else None
+            )
+            self._ex_quotation_client = MacExtendedClient(True, True, server=server)
         elif not self._ex_quotation_client.connected:
-            self._ex_quotation_client.connect().login()
+            self._connect_and_login(self._ex_quotation_client, "扩展行情")
         return self._ex_quotation_client
 
     def file_client(self):
@@ -439,7 +459,7 @@ class TdxClient:
         """
         return self.q_client().get_chart_sampling(market, code)
 
-    def stock_transaction(self, market: MARKET, code: str, date: date = None) -> list[dict]:
+    def stock_transaction(self, market: MARKET, code: str, date: date = None, start: int = 0, count: int | None = None) -> list[dict]:
         """获取逐笔成交。
 
         Parameters
@@ -450,6 +470,10 @@ class TdxClient:
             股票代码。
         date : date, optional
             None 为实时，传入日期查询历史成交。
+        start : int, optional
+            起始位置（默认 0）。
+        count : int, optional
+            请求数量（默认历史 2000、实时 1800）。
 
         Returns
         -------
@@ -460,7 +484,8 @@ class TdxClient:
             - ``trade_count`` : int    成交笔数
             - ``bs_flag`` : int        方向: 0=买入 / 1=卖出 / 2=中性盘 / 5=盘后
         """
-        return self.q_client().get_symbol_transactions(market, code, count=2000 if date else 1800, query_date=date)
+        effective_count = count if count is not None else (2000 if date else 1800)
+        return self.q_client().get_symbol_transactions(market, code, count=effective_count, start=start, query_date=date)
 
     def stock_auction(self, market: MARKET, code: str) -> list[dict]:
         """获取集合竞价数据（9:15–9:25）。
