@@ -17,9 +17,21 @@ class StandardClient(BaseClient):
     """标准行情客户端 (A股)"""
 
     def __init__(self, multithread=False, heartbeat=False, auto_retry=False,
-                 raise_exception=False, nonblocking=False):
+                 raise_exception=False, nonblocking=False,
+                 server: tuple[str, str, int] | None = None):
         super().__init__(main_hosts, 7709, multithread, heartbeat, auto_retry, raise_exception, nonblocking)
         self._decimal_map: dict[int, dict[str, int]] = {}
+        self._bound_server = server
+        if server is not None:
+            self._port = server[2]
+
+    def connect(self, ip=None, time_out=5, bind_port=None, bind_ip='0.0.0.0'):
+        """连接指定服务器；由 StandardClientPool 分配时固定使用其探测结果。"""
+        if ip is not None or self._bound_server is None:
+            return super().connect(ip, time_out, bind_port, bind_ip)
+        _, server_ip, server_port = self._bound_server
+        self._port = server_port
+        return super().connect(server_ip, time_out, bind_port, bind_ip)
 
     def _load_decimal(self, market: MARKET):
         """从股票列表加载 decimal_point 到缓存"""
@@ -171,30 +183,13 @@ class StandardClient(BaseClient):
                 break
             bars = [*part, *bars]
 
-        if not bars:
-            return []
-
-        cache_key = f"{market.value}_{code}"
-        float_shares = None
-        try:
-            float_shares = finance_cache.get(cache_key)
-            if float_shares is None:
-                finance_data = self.call(quotation.Finance(market, code))
-                if finance_data:
-                    float_shares = finance_data.get('liutongguben')
-                    if float_shares:
-                        finance_cache.set(cache_key, float_shares)
-        except Exception as e:
-            log.warning("获取流通股本失败: %s", e)
-
-        divisor = self._get_divisor(market, code)
+        # A 股标准 K 线的价格按千分单位编码。直接缩放即可，避免为每只证券
+        # 额外加载全市场证券列表、查询 Finance 和计算换手率。
         for bar in bars:
-            bar['open'] /= divisor
-            bar['close'] /= divisor
-            bar['high'] /= divisor
-            bar['low'] /= divisor
-            bar['turnover'] = round(bar['vol'] / float_shares * 100, 2) if float_shares and bar['vol'] else 0
-
+            bar['open'] /= 1000
+            bar['close'] /= 1000
+            bar['high'] /= 1000
+            bar['low'] /= 1000
         return bars
 
     @update_last_ack_time
