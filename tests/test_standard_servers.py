@@ -9,9 +9,18 @@ import pytest
 from opentdx.client.standardClient import StandardClient
 from opentdx.const import MARKET, PERIOD
 from opentdx.standard_servers import (
+    CAPABILITY_LOGIN,
+    CAPABILITY_MAC_STANDARD,
+    CAPABILITY_MAC_SYMBOL_TRANSACTIONS,
+    CAPABILITY_STANDARD_AUCTION,
+    CAPABILITY_STANDARD_DAILY_KLINE,
+    CAPABILITY_STANDARD_MINUTE_KLINE,
     StandardClientPool,
     StandardServer,
+    _call_mac_auction,
+    probe_server_capabilities,
     probe_standard_servers,
+    select_capability_servers,
 )
 
 
@@ -27,6 +36,21 @@ def test_bound_standard_client_connects_to_allocated_server() -> None:
 
     assert client.connect() is client
     client._t.connect.assert_called_once_with("10.0.0.2", 7711, 5, None, "0.0.0.0")
+
+
+def test_mac_auction_probe_bypasses_standard_method_shadow(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    client = MagicMock()
+    mac_auction = MagicMock(return_value={"items": []})
+    monkeypatch.setattr(
+        "opentdx.client.macMixin.MacQuotationMixin.get_auction", mac_auction
+    )
+
+    result = _call_mac_auction(client)
+
+    assert result == {"items": []}
+    mac_auction.assert_called_once_with(client, MARKET.SZ, "000001", start=0, count=1)
 
 
 def test_lightweight_kline_skips_list_finance_and_turnover() -> None:
@@ -93,12 +117,17 @@ def test_probe_verifies_login_daily_and_minute(
 
         def get_kline(
             self, market: MARKET, code: str, period: PERIOD, *, count: int
-        ) -> list[dict[str, int]]:
+        ) -> list[dict[str, object]]:
             assert market is MARKET.SZ
             assert code == "000001"
             assert count == 1
             self.periods.append(period)
-            return [{"close": 1}]
+            return [{"close": 1, "datetime": "2026-07-23"}]
+
+        def get_auction(self, market: MARKET, code: str) -> list[dict[str, int]]:
+            assert market is MARKET.SZ
+            assert code == "000001"
+            return []
 
         def disconnect(self) -> None:
             self.connected = False
@@ -106,8 +135,15 @@ def test_probe_verifies_login_daily_and_minute(
     monkeypatch.setattr(
         "opentdx.client.standardClient.StandardClient", FakeStandardClient
     )
+    monkeypatch.setattr(
+        "opentdx.standard_servers._probe_mac_capabilities",
+        lambda server, trade_date, timeout: (
+            (CAPABILITY_MAC_SYMBOL_TRANSACTIONS, CAPABILITY_MAC_STANDARD),
+            (),
+        ),
+    )
 
-    result = probe_standard_servers(
+    result = probe_server_capabilities(
         SERVERS,
         cache_path=tmp_path / "servers.json",
         cache_ttl=0,
@@ -117,6 +153,14 @@ def test_probe_verifies_login_daily_and_minute(
 
     assert len(result) == 1
     assert result[0].address == SERVERS[0]
+    assert result[0].supports(
+        CAPABILITY_LOGIN,
+        CAPABILITY_STANDARD_DAILY_KLINE,
+        CAPABILITY_STANDARD_MINUTE_KLINE,
+        CAPABILITY_STANDARD_AUCTION,
+        CAPABILITY_MAC_SYMBOL_TRANSACTIONS,
+        CAPABILITY_MAC_STANDARD,
+    )
     assert created[0].periods == [PERIOD.DAILY, PERIOD.MIN_1]
     assert created[0].connected is False
 
@@ -125,7 +169,17 @@ def test_probe_reuses_fresh_custom_cache(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     cache_path = tmp_path / "servers.json"
-    expected = StandardServer("标准 1", "10.0.0.1", 7709, 12.5)
+    expected = StandardServer(
+        "标准 1",
+        "10.0.0.1",
+        7709,
+        12.5,
+        capabilities=(
+            CAPABILITY_LOGIN,
+            CAPABILITY_STANDARD_DAILY_KLINE,
+            CAPABILITY_STANDARD_MINUTE_KLINE,
+        ),
+    )
     monkeypatch.setattr(
         "opentdx.standard_servers._probe_standard_server",
         lambda server, timeout: expected,
@@ -170,9 +224,18 @@ def test_probe_refreshes_expired_cache_and_pool_round_robins(
         ),
         encoding="utf-8",
     )
+    standard_capabilities = (
+        CAPABILITY_LOGIN,
+        CAPABILITY_STANDARD_DAILY_KLINE,
+        CAPABILITY_STANDARD_MINUTE_KLINE,
+    )
     fresh = [
-        StandardServer("标准 2", "10.0.0.2", 7711, 20),
-        StandardServer("标准 1", "10.0.0.1", 7709, 10),
+        StandardServer(
+            "标准 2", "10.0.0.2", 7711, 20, capabilities=standard_capabilities
+        ),
+        StandardServer(
+            "标准 1", "10.0.0.1", 7709, 10, capabilities=standard_capabilities
+        ),
     ]
     monkeypatch.setattr(
         "opentdx.standard_servers._probe_standard_server",
@@ -201,7 +264,17 @@ def test_probe_defaults_to_all_candidates(
 
     def fake_probe(server: tuple[str, str, int], timeout: float) -> StandardServer:
         probed.append(server)
-        return StandardServer(server[0], server[1], server[2], float(len(probed)))
+        return StandardServer(
+            server[0],
+            server[1],
+            server[2],
+            float(len(probed)),
+            capabilities=(
+                CAPABILITY_LOGIN,
+                CAPABILITY_STANDARD_DAILY_KLINE,
+                CAPABILITY_STANDARD_MINUTE_KLINE,
+            ),
+        )
 
     monkeypatch.setattr("opentdx.standard_servers._probe_standard_server", fake_probe)
 
@@ -213,3 +286,46 @@ def test_probe_defaults_to_all_candidates(
 
     assert probed == list(SERVERS)
     assert len(servers) == len(SERVERS)
+
+
+def test_capability_selection_keeps_manifest_complete() -> None:
+    standard_only = StandardServer(
+        "仅标准",
+        "10.0.2.1",
+        7709,
+        10,
+        capabilities=(
+            CAPABILITY_LOGIN,
+            CAPABILITY_STANDARD_DAILY_KLINE,
+            CAPABILITY_STANDARD_MINUTE_KLINE,
+        ),
+    )
+    mac_capable = StandardServer(
+        "MAC 完整",
+        "10.0.2.2",
+        7709,
+        20,
+        capabilities=(
+            CAPABILITY_LOGIN,
+            CAPABILITY_STANDARD_DAILY_KLINE,
+            CAPABILITY_STANDARD_MINUTE_KLINE,
+            CAPABILITY_MAC_SYMBOL_TRANSACTIONS,
+            CAPABILITY_MAC_STANDARD,
+        ),
+    )
+    unavailable = StandardServer(
+        "不可用",
+        "10.0.2.3",
+        7709,
+        None,
+        errors=("transport.connect: timeout",),
+    )
+    manifest = (standard_only, mac_capable, unavailable)
+
+    selected = select_capability_servers(
+        manifest, required_capabilities=(CAPABILITY_MAC_SYMBOL_TRANSACTIONS,)
+    )
+
+    assert selected == (mac_capable,)
+    assert len(manifest) == 3
+    assert unavailable.errors == ("transport.connect: timeout",)

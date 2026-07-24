@@ -1,10 +1,14 @@
 from .tdxClient import TdxClient
 from .server_router import DEFAULT_SERVER_ROUTER, ServerRoundRobin
 from .standard_servers import (
+    CAPABILITY_MAC_STANDARD,
+    CAPABILITY_MAC_SYMBOL_TRANSACTIONS,
     StandardClientPool,
     StandardServer,
     create_standard_client_pool,
+    probe_server_capabilities,
     probe_standard_servers,
+    select_capability_servers,
 )
 from .client.standardClient import StandardClient as QuotationClient
 from .client.extendedClient import ExtendedClient as exQuotationClient
@@ -29,8 +33,12 @@ __all__ = [
     "TdxClient",
     "ServerRoundRobin",
     "DEFAULT_SERVER_ROUTER",
+    "CAPABILITY_MAC_STANDARD",
+    "CAPABILITY_MAC_SYMBOL_TRANSACTIONS",
     "StandardServer",
     "StandardClientPool",
+    "probe_server_capabilities",
+    "select_capability_servers",
     "probe_standard_servers",
     "create_standard_client_pool",
     "QuotationClient",
