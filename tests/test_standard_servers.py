@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from opentdx.client.standardClient import StandardClient
-from opentdx.const import MARKET, PERIOD
+from opentdx.const import MARKET, PERIOD, main_hosts
 from opentdx.standard_servers import (
     CAPABILITY_LOGIN,
     CAPABILITY_MAC_STANDARD,
@@ -28,6 +28,42 @@ SERVERS = (
     ("标准 1", "10.0.0.1", 7709),
     ("标准 2", "10.0.0.2", 7711),
 )
+NEW_STANDARD_HOSTS = {
+    ("111.230.186.52", 7709),
+    ("129.204.230.128", 7709),
+    ("159.75.29.111", 7709),
+    ("43.139.95.83", 7709),
+    ("175.178.128.227", 7709),
+    ("81.71.32.47", 7709),
+    ("43.139.18.171", 7709),
+    ("175.178.112.197", 7709),
+    ("101.33.225.16", 7709),
+    ("111.229.247.189", 7709),
+    ("150.158.160.2", 7709),
+    ("49.232.15.141", 7709),
+    ("122.51.120.217", 7709),
+    ("111.231.113.208", 7709),
+    ("124.223.163.242", 7709),
+    ("62.234.50.143", 7709),
+    ("101.35.121.35", 7709),
+    ("101.42.240.54", 7709),
+    ("101.43.159.194", 7709),
+    ("81.70.151.186", 7709),
+    ("82.156.174.84", 7709),
+    ("120.53.8.251", 7709),
+    ("118.25.98.114", 7709),
+    ("122.51.232.182", 7709),
+    ("101.42.164.241", 7709),
+    ("152.136.191.169", 7709),
+    ("82.156.214.79", 7709),
+}
+
+
+def test_main_hosts_include_new_standard_candidates() -> None:
+    """新发现的标准行情地址全部进入统一能力探测候选。"""
+    addresses = {(host, port) for _, host, port in main_hosts}
+
+    assert NEW_STANDARD_HOSTS <= addresses
 
 
 def test_bound_standard_client_connects_to_allocated_server() -> None:
